@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">XLogger</string>
+    <string name="xposed_module_description">Extracts communication log of device physical interfaces - NFC, Bluetooth, etc</string>
+    <string-array name="xposed_scope_nfc">
+<!--        <item>android</item>-->    <!-- TODO REMOVE ??? -->
+        <item>com.google.android.apps.walletnfcrel</item>
+        <item>com.luigivampa92.nfcshare</item>   <!-- TODO REMOVE !!! -->
+        <item>cz.pb.emv.analytic_tool</item>   <!-- TODO REMOVE !!! -->
+        <item>com.github.devnied.emvnfccard</item>   <!-- TODO REMOVE !!! -->
+    </string-array>
+</resources>
