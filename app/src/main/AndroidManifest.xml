@@ -22,6 +22,15 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".InteractionLogBroadcastReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="${applicationId}.intent.action.RECEIVE_INTERACTION_LOG_NFC_RAW_TAG"/>
+            </intent-filter>
+        </receiver>
+
+
         <meta-data
             android:name="xposedmodule"
             android:value="true"/>

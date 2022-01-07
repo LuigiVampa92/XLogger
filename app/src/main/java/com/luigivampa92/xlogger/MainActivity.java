@@ -3,6 +3,7 @@ package com.luigivampa92.xlogger;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -11,8 +12,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
-        String a = "a";
+        TextView textView = (TextView) findViewById(R.id.text_debug);
+        DebugLastLogStorage storage = new DebugLastLogStorage(this);
+        textView.setText(storage.getLastLog());
     }
 }
