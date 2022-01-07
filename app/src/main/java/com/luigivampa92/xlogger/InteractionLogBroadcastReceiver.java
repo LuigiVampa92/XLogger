@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.luigivampa92.xlogger.data.DebugLastLogStorage;
 import com.luigivampa92.xlogger.data.InteractionLog;
 import com.luigivampa92.xlogger.data.InteractionLogEntry;
 import com.luigivampa92.xlogger.xposed.XLog;
@@ -61,6 +62,6 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
         DebugLastLogStorage storage = new DebugLastLogStorage(context);
         storage.saveLastLog(sb.toString());
 
-        
+
     }
 }

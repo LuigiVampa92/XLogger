@@ -1,7 +1,6 @@
 *.iml
 *.keystore
 *.apk
-*.jar
 *.DS_Store
 .idea/
 .gradle/

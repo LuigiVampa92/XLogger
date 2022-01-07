@@ -14,7 +14,7 @@
         android:supportsRtl="true">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,7 +29,6 @@
                 <action android:name="${applicationId}.intent.action.RECEIVE_INTERACTION_LOG_NFC_RAW_TAG"/>
             </intent-filter>
         </receiver>
-
 
         <meta-data
             android:name="xposedmodule"
