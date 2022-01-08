@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.util.Log;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -18,6 +17,14 @@ public class NfcHooks implements IXposedHookLoadPackage {
     private HostCardEmulationHooksHandler hceHooksHandler;
     private HostNfcFEmulationHooksHandler hnfHooksHandler;
 
+    // todo нормальный билдскрипт
+
+    // todo Для пакета com.google.android.apps.walletnfcrel с помощью интента ничего не находится, нужен рефлекшон
+
+    // todo правильные логи, не использовать е, всё не важное в д
+
+    // todo gms has co.g.App type of app object
+    // todo check permission + !feature! nfc nfc.hce
     // todo check for running module !
     // todo make pcap file
     // todo seems that all hooks apply twice, and the second time there is empty data
@@ -29,7 +36,7 @@ public class NfcHooks implements IXposedHookLoadPackage {
 
     private void obtainAppContext(final XC_LoadPackage.LoadPackageParam lpparam) {
         try {
-            XLog.i("Init app context hook for package %s", lpparam.packageName);
+            XLog.d("Init app context hook for package %s - start", lpparam.packageName);
             XposedHelpers.findAndHookMethod(
                     Application.class,
                     "onCreate",
@@ -38,17 +45,22 @@ public class NfcHooks implements IXposedHookLoadPackage {
                         protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                             super.beforeHookedMethod(param);
                             if (!(param.thisObject instanceof Application)) {
-                                Log.e("Init app context hook for package %s - error - received object is not a context", lpparam.packageName);
+                                XLog.e("Init app context hook for package %s - error - received object is not a context", lpparam.packageName);
                                 return;
                             }
                             if (context == null) {
                                 context = (Application) param.thisObject;
-                                if (context.getPackageManager().checkPermission(Manifest.permission.NFC, context.getPackageName()) != PackageManager.PERMISSION_GRANTED) {
-                                    Log.e("Init app context hook for package %s - error - app does not use NFC", lpparam.packageName);
-                                    return;
-                                }
-                                XLog.i("Init app context hook for package %s - complete", lpparam.packageName);
                             }
+
+                            boolean hasNfcPermission = context.getPackageManager().checkPermission(Manifest.permission.NFC, context.getPackageName()) == PackageManager.PERMISSION_GRANTED;
+                            if (!hasNfcPermission) {
+                                XLog.d("Init app context hook for package %s - error - app does not use NFC", lpparam.packageName);
+                                return;
+                            } else {
+                                XLog.d("Init app context hook for package %s - complete", lpparam.packageName);
+                            }
+
+                            // todo as enumeration:
 
                             // apply hooks for emulation mode (normal)
                             hceHooksHandler = new HostCardEmulationHooksHandler(lpparam, context);
@@ -63,8 +75,9 @@ public class NfcHooks implements IXposedHookLoadPackage {
                             nfcTagsHooksHandler.applyHooks();
                         }
                     });
+            XLog.d("Init app context hook for package %s - complete", lpparam.packageName);
         } catch (Throwable e) {
-            XLog.e("Init app context hook for package %s - error, %s", lpparam.packageName, e.getMessage());
+            XLog.e("Init app context hook for package %s - error", lpparam.packageName, e);
         }
     }
 }
