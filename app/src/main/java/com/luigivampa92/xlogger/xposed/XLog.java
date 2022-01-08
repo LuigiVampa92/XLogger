@@ -6,7 +6,7 @@ public class XLog {
 
     private static final String LOG_TAG = "LV92_XLOGGER";
     private static final String LOG_TAG_XPOSED = "Xposed";
-    private static final int LOG_LEVEL = Log.INFO;  // todo make buildconfig depend on buildtype !!
+    private static final int LOG_LEVEL = Log.VERBOSE;  // todo make buildconfig depend on buildtype !!
     private static final boolean LOG_TO_XPOSED = false;
 
     private XLog() {}
