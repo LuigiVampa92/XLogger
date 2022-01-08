@@ -40,6 +40,9 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
 
     @Override
     public void applyHooks() {
+        if (!featuresSupported()) {
+            return;
+        }
         if (hceServices == null) {
             hceServices = performHostApduServicesSearchByPackageManager(hookedAppcontext);
             if (!hceServices.isEmpty()) {
@@ -49,7 +52,6 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         }
     }
 
-    // below - hce
 
     // todo remove ??
     private void logHceServiceList(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<? extends HostApduService>> hceServices) {
@@ -238,5 +240,11 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
             }
         }
         return false;
+    }
+
+    private boolean featuresSupported() {
+        boolean hasNfcFeature = hookedAppcontext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC);
+        boolean hasNfcHceFeature = hookedAppcontext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION);
+        return hasNfcFeature && hasNfcHceFeature;
     }
 }

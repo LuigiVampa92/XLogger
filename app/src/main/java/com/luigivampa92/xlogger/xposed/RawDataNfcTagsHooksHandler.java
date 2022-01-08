@@ -3,6 +3,7 @@ package com.luigivampa92.xlogger.xposed;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.nfc.tech.IsoDep;
 import android.nfc.tech.MifareUltralight;
 import android.nfc.tech.NfcA;
@@ -30,6 +31,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
     private final Context hookedAppcontext;
 
 //    private String currentTagType;  // todo !!!
+
     private List<InteractionLogEntry> currentLogEntries;
 
     public RawDataNfcTagsHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppcontext) {
@@ -39,6 +41,9 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
 
     @Override
     public void applyHooks() {
+        if (!featuresSupported()) {
+            return;
+        }
         applyNfcHooks(lpparam);
     }
 
@@ -129,5 +134,9 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
         } catch (Throwable e) {
             XLog.e("Init nfc hooks for package %s - tag technology %s - error", lpparam.packageName, tagTechnologyClass.getSimpleName(), e);
         }
+    }
+
+    private boolean featuresSupported() {
+        return hookedAppcontext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC);
     }
 }

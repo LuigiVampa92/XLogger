@@ -23,6 +23,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class HostNfcFEmulationHooksHandler implements HooksHandler {
 
+    // todo пока что нихуя не логгируется ! доделать
+
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppcontext;
     private Set<Class<? extends HostNfcFService>> hnfServices;
@@ -35,7 +37,10 @@ public class HostNfcFEmulationHooksHandler implements HooksHandler {
 
     @Override
     public void applyHooks() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N && hnfServices == null) {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N || !featuresSupported()) {
+            return;
+        }
+        if (hnfServices == null) {
             hnfServices = performHostNfcFServicesSearchByPackageManager(hookedAppcontext);
             if (!hnfServices.isEmpty()) {
                 logHnfServiceList(lpparam, hnfServices);
@@ -209,5 +214,11 @@ public class HostNfcFEmulationHooksHandler implements HooksHandler {
             }
         }
         return false;
+    }
+
+    private boolean featuresSupported() {
+        boolean hasNfcFeature = hookedAppcontext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC);
+        boolean hasNfcFHceFeature = hookedAppcontext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION_NFCF);
+        return hasNfcFeature && hasNfcFHceFeature;
     }
 }
