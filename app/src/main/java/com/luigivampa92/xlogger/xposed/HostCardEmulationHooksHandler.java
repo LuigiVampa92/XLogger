@@ -18,6 +18,7 @@ import com.luigivampa92.xlogger.data.InteractionType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,9 +29,12 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class HostCardEmulationHooksHandler implements HooksHandler {
 
+    // todo com.google.android.gms.nearby.mediums.nearfieldcommunication.NfcAdvertisingChimeraService - oncreate is abstract, throws an error - bind to first apdu !!
+    // todo com.google.android.gms.tapandpay.hce.service.TpHceChimeraService - onCreate called as soon as device unlocked, should bind to process first apdu !!
+
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppcontext;
-    private Set<Class<? extends HostApduService>> hceServices;
+    private Set<Class<?>> hceServices;
     private List<InteractionLogEntry> currentLogEntries;
 
     public HostCardEmulationHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppcontext) {
@@ -44,7 +48,13 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
             return;
         }
         if (hceServices == null) {
-            hceServices = performHostApduServicesSearchByPackageManager(hookedAppcontext);
+            if (lpparam.packageName.equals("com.google.android.apps.walletnfcrel")) {
+                hceServices = getHceServicesForGpay(hookedAppcontext);
+            } else if (lpparam.packageName.equals("com.google.android.gms")) {
+                hceServices = getHceServicesForGms(hookedAppcontext);
+            } else {
+                hceServices = performHostApduServicesSearchByPackageManager(hookedAppcontext);
+            }
             if (!hceServices.isEmpty()) {
                 logHceServiceList(lpparam, hceServices);   // todo remove
                 applyHceHooks(lpparam, hceServices);
@@ -54,10 +64,10 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
 
 
     // todo remove ??
-    private void logHceServiceList(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<? extends HostApduService>> hceServices) {
+    private void logHceServiceList(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<?>> hceServices) {
         try {
             if (hceServices != null && !hceServices.isEmpty()) {
-                for (final Class<? extends HostApduService> serviceClass : hceServices) {
+                for (final Class<?> serviceClass : hceServices) {
                     XLog.d("Package %s - hce service found - %s", lpparam.packageName, serviceClass.getCanonicalName());
                 }
             }
@@ -67,28 +77,76 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
     }
 
 
+    // hce services in wallet app are not related to payment cards, they are for transport and loyalty cards
+    // there are two of them, they cannot found by query query, and running reflection of start of every process is way too expensive (about 1 sec!)
+    private Set<Class<?>> getHceServicesForGpay(Context context) {
+        List<String> walletHceServices = Arrays.asList(
+                "com.google.commerce.tapandpay.android.hce.service.ValuableApduService",
+                "com.google.commerce.tapandpay.android.transit.tap.service.TransitHceService"
+        );
 
+        HashSet<Class<?>> result = new HashSet<>();
+        for (String targetClassName: walletHceServices) {
+            try {
+                Class<?> targetClass = XposedHelpers.findClass(targetClassName, context.getClassLoader());
+                if (!Modifier.isAbstract(targetClass.getModifiers())) {
+                    result.add(targetClass);
+                }
+            }
+            catch (Throwable e) {
+                XLog.e("Error while trying to find wallet hce service class - %s", targetClassName);
+            }
+        }
 
+        return result;
+    }
 
+    // payment related hce services are located not in google pay app but in google mobile services
+    // they also extend a different class, the one from chimera module - com.google.android.chimera.HostApduService
+    // it is not a normal HostApduService, it is specific only to google services and not present in android framework classpath
+    // it repeats a normal HostApduService in fields, methods and behaviour
+    // this method provides classes that inherit it (again, to save time on reflection search)
+    private Set<Class<?>> getHceServicesForGms(Context context) {
+        List<String> googlePayHceServices = Arrays.asList(
+                "com.google.android.gms.tapandpay.hce.service.TpHceChimeraService",
+                "com.google.android.gms.nearby.mediums.nearfieldcommunication.NfcAdvertisingChimeraService"
+        );
 
+        HashSet<Class<?>> result = new HashSet<>();
+        for (String targetClassName: googlePayHceServices) {
+            try {
+                Class<?> targetClass = XposedHelpers.findClass(targetClassName, context.getClassLoader());
+                if (!Modifier.isAbstract(targetClass.getModifiers())) {
+                    result.add(targetClass);
+                }
+            }
+            catch (Throwable e) {
+                XLog.e("Error while trying to find gms hce service class - %s", targetClassName);
+            }
+        }
 
+        return result;
+    }
 
+    // todo common logic above
+
+    // for all normal unprivileged app hce services can be discovered via intent query targeted to itself
+    // it works in a few milliseconds, while reflection approach with scanning dex file takes from 300 to 900 ms
     @SuppressWarnings("unchecked")
     @SuppressLint("QueryPermissionsNeeded")
-    private Set<Class<? extends HostApduService>> performHostApduServicesSearchByPackageManager(Context context) {
+    private Set<Class<?>> performHostApduServicesSearchByPackageManager(Context context) {
         Intent intent = new Intent();
         intent.setAction("android.nfc.cardemulation.action.HOST_APDU_SERVICE");
         intent.setPackage(context.getPackageName());
         List<ResolveInfo> queryResult = context.getPackageManager().queryIntentServices(intent, PackageManager.MATCH_ALL);
 
-        HashSet<Class<? extends HostApduService>> result = new HashSet<>();
+        HashSet<Class<?>> result = new HashSet<>();
         for (ResolveInfo serviceInfo: queryResult) {
             String targetClassName = serviceInfo.serviceInfo.name;
             try {
                 Class<?> targetClass = XposedHelpers.findClass(targetClassName, context.getClassLoader());
                 if (HostApduService.class.isAssignableFrom(targetClass) && !Modifier.isAbstract(targetClass.getModifiers())) {
-                    Class<? extends HostApduService> castedToHeirClass = (Class<? extends HostApduService>) targetClass;
-                    result.add(castedToHeirClass);
+                    result.add(targetClass);
                 }
             }
             catch (ClassCastException e) {
@@ -99,10 +157,10 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         return result;
     }
 
-    private void applyHceHooks(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<? extends HostApduService>> hceServices) {
+    private void applyHceHooks(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<?>> hceServices) {
         try {
             XLog.d("Apply hce hooks for package %s - start", lpparam.packageName);
-            for (final Class<? extends HostApduService> serviceClass : hceServices) {
+            for (final Class<?> serviceClass : hceServices) {
                 applyHceStartHookForService(serviceClass);
                 applyHceStopHookForService(serviceClass);
                 applyHceApduHookForService(serviceClass);
@@ -113,7 +171,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         }
     }
 
-    private void applyHceStartHookForService(Class<? extends HostApduService> serviceClass) {
+    private void applyHceStartHookForService(Class<?> serviceClass) {
 
         String targetMethodName = "onCreate";
 
@@ -137,7 +195,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         }
     }
 
-    private void applyHceStopHookForService(Class<? extends HostApduService> serviceClass) {
+    private void applyHceStopHookForService(Class<?> serviceClass) {
 
         String targetMethodName = "onDeactivated";
 
@@ -174,7 +232,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         }
     }
 
-    private void applyHceApduHookForService(Class<? extends HostApduService> serviceClass) {
+    private void applyHceApduHookForService(Class<?> serviceClass) {
         String targetMethodName = "processCommandApdu";
 
         XLog.d("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName()); // todo remove
