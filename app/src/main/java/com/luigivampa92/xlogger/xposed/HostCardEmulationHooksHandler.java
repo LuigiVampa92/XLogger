@@ -132,7 +132,6 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
 
     // for all normal unprivileged app hce services can be discovered via intent query targeted to itself
     // it works in a few milliseconds, while reflection approach with scanning dex file takes from 300 to 900 ms
-    @SuppressWarnings("unchecked")
     @SuppressLint("QueryPermissionsNeeded")
     private Set<Class<?>> performHostApduServicesSearchByPackageManager(Context context) {
         Intent intent = new Intent();
@@ -161,37 +160,12 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         try {
             XLog.d("Apply hce hooks for package %s - start", lpparam.packageName);
             for (final Class<?> serviceClass : hceServices) {
-                applyHceStartHookForService(serviceClass);
                 applyHceStopHookForService(serviceClass);
                 applyHceApduHookForService(serviceClass);
             }
             XLog.d("Apply hce hooks for package %s - complete", lpparam.packageName);
         } catch (Throwable e) {
             XLog.e("Apply hce hooks for package %s - error", lpparam.packageName, e);
-        }
-    }
-
-    private void applyHceStartHookForService(Class<?> serviceClass) {
-
-        String targetMethodName = "onCreate";
-
-        XLog.d("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
-        if (hasNonAbstractMethodImplementation(serviceClass, targetMethodName)) {
-            XposedHelpers.findAndHookMethod(
-                    serviceClass,
-                    targetMethodName,
-                    new XC_MethodHook() {
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            super.afterHookedMethod(param);
-                            XLog.d("Emulation activated - %s - session record started", serviceClass.getCanonicalName());
-
-                            currentLogEntries = new ArrayList<>();
-                        }
-                    });
-            XLog.d("Apply %s hook on %s - complete", targetMethodName, serviceClass.getCanonicalName());
-        } else {
-            XLog.e("Apply %s hook on %s - error - method is abstract", targetMethodName, serviceClass.getCanonicalName());
         }
     }
 
@@ -211,7 +185,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                             super.afterHookedMethod(param);
                             XLog.d("Emulation deactivated - %s - session record stopped", serviceClass.getCanonicalName());
 
-                            InteractionLog interactionLog = new InteractionLog(InteractionType.HCE_NORMAL, (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
+                            InteractionLog interactionLog = new InteractionLog(InteractionType.HCE_NORMAL, lpparam.packageName, serviceClass.getCanonicalName(), (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
 
                             Intent sendInteractionLogRecordIntent = new Intent();
                             sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
@@ -220,10 +194,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                             sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
 
                             hookedAppcontext.sendBroadcast(sendInteractionLogRecordIntent);
-
-//                            currentTagType = null;     // todo !!!
                             currentLogEntries = null;
-
                         }
                     });
             XLog.d("Apply %s hook on %s - complete", targetMethodName, serviceClass.getCanonicalName());
@@ -252,10 +223,13 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                 if (cApdu.length > 0) {
                                     XLog.d("HCE RX: %s", DataUtil.toHexString(cApdu));
 
-                                    if (currentLogEntries != null) {
-                                        InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), cApdu, BroadcastConstants.PEER_TERMINAL, BroadcastConstants.PEER_DEVICE);
-                                        currentLogEntries.add(logEntry);
+                                    if (currentLogEntries == null) {
+                                        currentLogEntries = new ArrayList<>();
+                                        XLog.d("Emulation activated - session record started");
                                     }
+
+                                    InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), cApdu, BroadcastConstants.PEER_TERMINAL, BroadcastConstants.PEER_DEVICE);
+                                    currentLogEntries.add(logEntry);
 
                                 } else {
                                     XLog.e("HCE ERROR: received empty command apdu");
@@ -272,10 +246,13 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                 if (rApdu.length > 0) {
                                     XLog.d("HCE TX: %s", DataUtil.toHexString(rApdu));
 
-                                    if (currentLogEntries != null) {
-                                        InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_TERMINAL);
-                                        currentLogEntries.add(logEntry);
+                                    if (currentLogEntries == null) {
+                                        currentLogEntries = new ArrayList<>();
+                                        XLog.d("Emulation activated - session record started");
                                     }
+
+                                    InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_TERMINAL);
+                                    currentLogEntries.add(logEntry);
 
                                 } else {
                                     XLog.e("HCE ERROR: transmitted empty response apdu");

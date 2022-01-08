@@ -8,13 +8,17 @@ import java.util.List;
 public final class InteractionLog implements Parcelable {
 
     private final InteractionType type;
+    private final String packageName;
+    private final String serviceName;
     private final List<InteractionLogEntry> entries;
     private final long timestamp;
     private final long duration;
 
-    public InteractionLog(InteractionType type, List<InteractionLogEntry> entries) {
+    public InteractionLog(InteractionType type, String packageName, String serviceName, List<InteractionLogEntry> entries) {
         this.type = type;
         this.entries = entries;
+        this.packageName = packageName;
+        this.serviceName = serviceName;
         if (entries != null && !entries.isEmpty()) {
             InteractionLogEntry firstEntry = entries.get(0);
             InteractionLogEntry lastEntry = entries.get(entries.size() - 1);
@@ -28,6 +32,14 @@ public final class InteractionLog implements Parcelable {
 
     public InteractionType getType() {
         return type;
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public String getServiceName() {
+        return serviceName;
     }
 
     public List<InteractionLogEntry> getEntries() {
@@ -44,6 +56,8 @@ public final class InteractionLog implements Parcelable {
 
     protected InteractionLog(Parcel in) {
         type = InteractionType.fromValue(in.readInt());
+        packageName = in.readString();
+        serviceName = in.readString();
         entries = in.createTypedArrayList(InteractionLogEntry.CREATOR);
         timestamp = in.readLong();
         duration = in.readLong();
@@ -52,6 +66,8 @@ public final class InteractionLog implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(type.getValue());
+        dest.writeString(packageName);
+        dest.writeString(serviceName);
         dest.writeTypedList(entries);
         dest.writeLong(timestamp);
         dest.writeLong(duration);

@@ -36,7 +36,9 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
         XLog.i("*******");
         XLog.i("*******");
         XLog.i("INTERACTION LOG RECEIVED");
+        XLog.i("APP - %s", interactionLog.getPackageName());
         XLog.i("TYPE - %s", interactionLog.getType().name());
+        XLog.i("SERVICE - %s", interactionLog.getServiceName());
         XLog.i("TIME - %s", new SimpleDateFormat("dd.MM.yyyy, HH:mm:ss").format(new Date(interactionLog.getTimestamp())));
         XLog.i("DURATION - %d ms", interactionLog.getDuration());
         for (InteractionLogEntry logEntry : interactionLog.getEntries()) {
@@ -48,7 +50,9 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
         StringBuilder sb = new StringBuilder();
         sb.append("*******\n");
         sb.append("INTERACTION LOG RECEIVED\n");
+        sb.append(String.format("APP - %s\n", interactionLog.getPackageName()));
         sb.append(String.format("TYPE - %s\n", interactionLog.getType().name()));
+        sb.append(String.format("SERVICE - %s\n", interactionLog.getServiceName()));
         sb.append(String.format("TIME - %s\n", new SimpleDateFormat("dd.MM.yyyy, HH:mm:ss").format(new Date(interactionLog.getTimestamp()))));
         sb.append(String.format("DURATION - %d ms\n", interactionLog.getDuration()));
         sb.append("*******\n");

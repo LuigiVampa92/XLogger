@@ -29,9 +29,6 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
 
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppcontext;
-
-//    private String currentTagType;  // todo !!!
-
     private List<InteractionLogEntry> currentLogEntries;
 
     public RawDataNfcTagsHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppcontext) {
@@ -81,7 +78,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                             super.afterHookedMethod(param);
                             XLog.d("Nfc interaction - tag technology %s - session record stopped", tagTechnologyClass.getSimpleName());
 
-                            InteractionLog interactionLog = new InteractionLog(InteractionType.NFC_TAG_RAW, (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
+                            InteractionLog interactionLog = new InteractionLog(InteractionType.NFC_TAG_RAW, lpparam.packageName, tagTechnologyClass.getSimpleName(), (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
 
                             Intent sendInteractionLogRecordIntent = new Intent();
                             sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
@@ -90,8 +87,6 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                             sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
 
                             hookedAppcontext.sendBroadcast(sendInteractionLogRecordIntent);
-
-//                            currentTagType = null;     // todo !!!
                             currentLogEntries = null;
                         }
                     });
