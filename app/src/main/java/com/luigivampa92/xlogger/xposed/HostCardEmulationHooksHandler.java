@@ -29,9 +29,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class HostCardEmulationHooksHandler implements HooksHandler {
 
-    // todo com.google.android.gms.nearby.mediums.nearfieldcommunication.NfcAdvertisingChimeraService - oncreate is abstract, throws an error - bind to first apdu !!
-    // todo com.google.android.gms.tapandpay.hce.service.TpHceChimeraService - onCreate called as soon as device unlocked, should bind to process first apdu !!
-
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppcontext;
     private Set<Class<?>> hceServices;
@@ -108,8 +105,8 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
     // this method provides classes that inherit it (again, to save time on reflection search)
     private Set<Class<?>> getHceServicesForGms(Context context) {
         List<String> googlePayHceServices = Arrays.asList(
-                "com.google.android.gms.tapandpay.hce.service.TpHceChimeraService",
-                "com.google.android.gms.nearby.mediums.nearfieldcommunication.NfcAdvertisingChimeraService"
+                "com.google.android.gms.tapandpay.hce.service.TpHceChimeraService",                          // oncreate called as soon as device unlocked - must hook first capdu
+                "com.google.android.gms.nearby.mediums.nearfieldcommunication.NfcAdvertisingChimeraService"  // oncreate is abstract - again must hook first capdu
         );
 
         HashSet<Class<?>> result = new HashSet<>();
@@ -169,6 +166,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         }
     }
 
+    // todo doc about 2 approaches
     private void applyHceStopHookForService(Class<?> serviceClass) {
 
         String targetMethodName = "onDeactivated";
@@ -216,8 +214,8 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                     new XC_MethodHook() {
 
                         @Override
-                        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                            super.beforeHookedMethod(param);
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            super.afterHookedMethod(param);
                             if (param.args.length > 0 && param.args[0] != null && param.args[0] instanceof byte[]) {
                                 byte[] cApdu = (byte[]) param.args[0];
                                 if (cApdu.length > 0) {
@@ -235,21 +233,30 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                     XLog.e("HCE ERROR: received empty command apdu");
                                 }
                             }
-                        }
 
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            super.afterHookedMethod(param);
-                            Object result = param.getResult();
-                            if (result != null && result instanceof byte[]) {
+                            Object result = param.getResultOrThrowable();
+                            if (result == null || param.hasThrowable() || result instanceof Throwable) {
+                                return;
+                            }
+
+                            if (result instanceof byte[]) {
                                 byte[] rApdu = (byte[]) result;
                                 if (rApdu.length > 0) {
-                                    XLog.d("HCE TX: %s", DataUtil.toHexString(rApdu));
 
                                     if (currentLogEntries == null) {
                                         currentLogEntries = new ArrayList<>();
                                         XLog.d("Emulation activated - session record started");
                                     }
+
+                                    if (!currentLogEntries.isEmpty()) {
+                                        InteractionLogEntry lastEntry = currentLogEntries.get(currentLogEntries.size() - 1);
+                                        boolean alreadyRecorded = Arrays.equals(lastEntry.getData(), rApdu);
+                                        if (alreadyRecorded) {
+                                            return;
+                                        }
+                                    }
+
+                                    XLog.d("HCE TX: %s", DataUtil.toHexString(rApdu));  // todo i ?
 
                                     InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_TERMINAL);
                                     currentLogEntries.add(logEntry);
@@ -264,6 +271,55 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
             XLog.d("Apply %s hook on %s - complete", targetMethodName, serviceClass.getCanonicalName()); // todo remove
         } else {
             XLog.e("Apply %s hook on %s - error - method is abstract", targetMethodName, serviceClass.getCanonicalName());
+        }
+
+        String callbackMethodName = "sendResponseApdu";
+        XLog.d("Apply %s hook on parent class - start", callbackMethodName);
+        try {
+            Class<?> abstractParentService = serviceClass.getSuperclass();
+            XposedHelpers.findAndHookMethod(
+                    abstractParentService,
+                    callbackMethodName,
+                    byte[].class,
+                    new XC_MethodHook() {
+
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            super.afterHookedMethod(param);
+
+                            // todo move common code to method ?
+
+                            if (param != null && param.args.length > 0 && param.args[0] instanceof byte[]) {
+                                byte[] rApdu = (byte[]) param.args[0];
+                                if (rApdu.length > 0) {
+
+                                    if (currentLogEntries == null) {
+                                        currentLogEntries = new ArrayList<>();
+                                        XLog.d("Emulation activated - session record started");
+                                    }
+
+                                    if (!currentLogEntries.isEmpty()) {
+                                        InteractionLogEntry lastEntry = currentLogEntries.get(currentLogEntries.size() - 1);
+                                        boolean alreadyRecorded = Arrays.equals(lastEntry.getData(), rApdu);
+                                        if (alreadyRecorded) {
+                                            return;
+                                        }
+                                    }
+
+                                    XLog.d("HCE TX: %s", DataUtil.toHexString(rApdu));
+
+                                    InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_TERMINAL);
+                                    currentLogEntries.add(logEntry);
+                                } else {
+                                    XLog.e("HCE ERROR: transmitted empty response apdu");
+                                }
+                            }
+                        }
+                    }
+            );
+            XLog.d("Apply %s hook on parent class - complete", callbackMethodName);
+        } catch (Throwable e) {
+            XLog.d("Apply %s hook on parent class - error", callbackMethodName);
         }
     }
 
