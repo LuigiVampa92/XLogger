@@ -28,12 +28,12 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public class RawDataNfcTagsHooksHandler implements HooksHandler {
 
     private final XC_LoadPackage.LoadPackageParam lpparam;
-    private final Context hookedAppcontext;
+    private final Context hookedAppContext;
     private List<InteractionLogEntry> currentLogEntries;
 
-    public RawDataNfcTagsHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppcontext) {
+    public RawDataNfcTagsHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppContext) {
         this.lpparam = lpparam;
-        this.hookedAppcontext = hookedAppcontext;
+        this.hookedAppContext = hookedAppContext;
     }
 
     @Override
@@ -63,9 +63,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             super.afterHookedMethod(param);
-                            XLog.d("Nfc interaction - tag technology %s - session record started", tagTechnologyClass.getSimpleName());
-
-//                            currentTagType = tagTechnologyClass.getSimpleName();    // todo !!!
+                            XLog.i("Nfc interaction - tag technology %s - session record started", tagTechnologyClass.getSimpleName());
                             currentLogEntries = new ArrayList<>();
                         }
                     });
@@ -76,7 +74,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             super.afterHookedMethod(param);
-                            XLog.d("Nfc interaction - tag technology %s - session record stopped", tagTechnologyClass.getSimpleName());
+                            XLog.i("Nfc interaction - tag technology %s - session record stopped", tagTechnologyClass.getSimpleName());
 
                             InteractionLog interactionLog = new InteractionLog(InteractionType.NFC_TAG_RAW, lpparam.packageName, tagTechnologyClass.getSimpleName(), (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
 
@@ -86,7 +84,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                             sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG_NFC_RAW_TAG);
                             sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
 
-                            hookedAppcontext.sendBroadcast(sendInteractionLogRecordIntent);
+                            hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
                             currentLogEntries = null;
                         }
                     });
@@ -101,37 +99,37 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                             if (param.args.length > 0 && param.args[0] != null && param.args[0] instanceof byte[]) {
                                 byte[] cApdu = (byte[]) param.args[0];
                                 if (cApdu.length > 0) {
-                                    XLog.d("NFC TX: %s", DataUtil.toHexString(cApdu));
+                                    XLog.i("NFC TX: %s", DataUtil.toHexString(cApdu));
                                     if (currentLogEntries != null) {
                                         InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), cApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_CARD);
                                         currentLogEntries.add(logEntry);
                                     }
                                 } else {
-                                    XLog.e("NFC TX ERROR: empty command apdu");
+                                    XLog.i("NFC TX ERROR: empty command apdu");
                                 }
                             }
                             Object result = param.getResult();
                             if (result != null && result instanceof byte[]) {
                                 byte[] rApdu = (byte[]) result;
                                 if (rApdu.length > 0) {
-                                    XLog.d("NFC RX: %s", DataUtil.toHexString(rApdu));
+                                    XLog.i("NFC RX: %s", DataUtil.toHexString(rApdu));
                                     if (currentLogEntries != null) {
                                         InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_CARD, BroadcastConstants.PEER_DEVICE);
                                         currentLogEntries.add(logEntry);
                                     }
                                 } else {
-                                    XLog.e("NFC RX ERROR: empty response apdu");
+                                    XLog.i("NFC RX ERROR: empty response apdu");
                                 }
                             }
                         }
                     });
             XLog.d("Init nfc hooks for package %s - tag technology %s - complete", lpparam.packageName, tagTechnologyClass.getSimpleName());
         } catch (Throwable e) {
-            XLog.e("Init nfc hooks for package %s - tag technology %s - error", lpparam.packageName, tagTechnologyClass.getSimpleName(), e);
+            XLog.d("Init nfc hooks for package %s - tag technology %s - error", lpparam.packageName, tagTechnologyClass.getSimpleName());
         }
     }
 
     private boolean featuresSupported() {
-        return hookedAppcontext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC);
+        return hookedAppContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC);
     }
 }
