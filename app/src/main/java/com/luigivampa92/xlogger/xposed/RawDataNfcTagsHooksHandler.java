@@ -13,7 +13,7 @@ import android.nfc.tech.NfcV;
 import android.nfc.tech.TagTechnology;
 
 import com.luigivampa92.xlogger.BroadcastConstants;
-import com.luigivampa92.xlogger.DataUtil;
+import com.luigivampa92.xlogger.DataUtils;
 import com.luigivampa92.xlogger.data.InteractionLog;
 import com.luigivampa92.xlogger.data.InteractionLogEntry;
 import com.luigivampa92.xlogger.data.InteractionType;
@@ -99,7 +99,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                             if (param.args.length > 0 && param.args[0] != null && param.args[0] instanceof byte[]) {
                                 byte[] cApdu = (byte[]) param.args[0];
                                 if (cApdu.length > 0) {
-                                    XLog.i("NFC TX: %s", DataUtil.toHexString(cApdu));
+                                    XLog.i("NFC TX: %s", DataUtils.toHexString(cApdu));
                                     if (currentLogEntries != null) {
                                         InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), cApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_CARD);
                                         currentLogEntries.add(logEntry);
@@ -112,7 +112,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                             if (result != null && result instanceof byte[]) {
                                 byte[] rApdu = (byte[]) result;
                                 if (rApdu.length > 0) {
-                                    XLog.i("NFC RX: %s", DataUtil.toHexString(rApdu));
+                                    XLog.i("NFC RX: %s", DataUtils.toHexString(rApdu));
                                     if (currentLogEntries != null) {
                                         InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_CARD, BroadcastConstants.PEER_DEVICE);
                                         currentLogEntries.add(logEntry);

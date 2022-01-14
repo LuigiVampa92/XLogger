@@ -1,8 +1,8 @@
 package com.luigivampa92.xlogger;
 
-public final class DataUtil {
+public final class DataUtils {
 
-    private DataUtil() {
+    private DataUtils() {
         throw new IllegalAccessError("No instantiation!");
     }
 

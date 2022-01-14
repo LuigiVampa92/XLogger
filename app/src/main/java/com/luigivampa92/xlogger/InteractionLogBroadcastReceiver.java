@@ -42,7 +42,7 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
         XLog.i("TIME - %s", new SimpleDateFormat("dd.MM.yyyy, HH:mm:ss").format(new Date(interactionLog.getTimestamp())));
         XLog.i("DURATION - %d ms", interactionLog.getDuration());
         for (InteractionLogEntry logEntry : interactionLog.getEntries()) {
-            XLog.i("[%s] %s : %s", new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(logEntry.getTimestamp())), logEntry.getSender(), DataUtil.toHexString(logEntry.getData()));
+            XLog.i("[%s] %s : %s", new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(logEntry.getTimestamp())), logEntry.getSender(), DataUtils.toHexString(logEntry.getData()));
         }
         XLog.i("*******");
         XLog.i("*******");
@@ -57,7 +57,7 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
         sb.append(String.format("DURATION - %d ms\n", interactionLog.getDuration()));
         sb.append("*******\n");
         for (InteractionLogEntry logEntry : interactionLog.getEntries()) {
-            sb.append(String.format("[%s] %s : %s\n", new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(logEntry.getTimestamp())), logEntry.getSender(), DataUtil.toHexString(logEntry.getData())));
+            sb.append(String.format("[%s] %s : %s\n", new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(logEntry.getTimestamp())), logEntry.getSender(), DataUtils.toHexString(logEntry.getData())));
         }
         sb.append("*******\n");
 
