@@ -52,21 +52,9 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                 hceServices = performHostApduServicesSearchByPackageManager(hookedAppContext);
             }
             if (!hceServices.isEmpty()) {
-                logHceServiceList(lpparam, hceServices);
+                HookUtils.logClassList(hceServices, lpparam.packageName);
                 applyHceHooks(lpparam, hceServices);
             }
-        }
-    }
-
-    private void logHceServiceList(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<?>> hceServices) {
-        try {
-            if (hceServices != null && !hceServices.isEmpty()) {
-                for (final Class<?> serviceClass : hceServices) {
-                    XLog.d("Package %s - hce service found - %s", lpparam.packageName, serviceClass.getCanonicalName());
-                }
-            }
-        }
-        catch (Throwable e) {
         }
     }
 
