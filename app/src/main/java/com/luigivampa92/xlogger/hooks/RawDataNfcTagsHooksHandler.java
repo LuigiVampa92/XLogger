@@ -1,4 +1,4 @@
-package com.luigivampa92.xlogger.xposed;
+package com.luigivampa92.xlogger.hooks;
 
 import android.content.ComponentName;
 import android.content.Context;

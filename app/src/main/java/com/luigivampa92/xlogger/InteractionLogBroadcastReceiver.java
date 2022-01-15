@@ -7,7 +7,7 @@ import android.content.Intent;
 import com.luigivampa92.xlogger.data.DebugLastLogStorage;
 import com.luigivampa92.xlogger.data.InteractionLog;
 import com.luigivampa92.xlogger.data.InteractionLogEntry;
-import com.luigivampa92.xlogger.xposed.XLog;
+import com.luigivampa92.xlogger.hooks.XLog;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

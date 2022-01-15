@@ -1,9 +1,12 @@
-package com.luigivampa92.xlogger.xposed;
+package com.luigivampa92.xlogger.hooks;
 
 import android.Manifest;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -13,21 +16,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public class NfcHooks implements IXposedHookLoadPackage {
 
     private Context context;
-    private RawDataNfcTagsHooksHandler nfcTagsHooksHandler;
-    private HostCardEmulationHooksHandler hceHooksHandler;
-    private HostNfcFEmulationHooksHandler hnfHooksHandler;
-
-    // todo нормальный билдскрипт
-
-    // todo Для пакета com.google.android.apps.walletnfcrel с помощью интента ничего не находится, нужен рефлекшон
-
-    // todo правильные логи, не использовать е, всё не важное в д
-
-    // todo gms has co.g.App type of app object
-    // todo check permission + !feature! nfc nfc.hce
-    // todo check for running module !
-    // todo make pcap file
-    // todo seems that all hooks apply twice, and the second time there is empty data
+    private List<HooksHandler> hooksHandlers;
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
@@ -60,19 +49,14 @@ public class NfcHooks implements IXposedHookLoadPackage {
                                 XLog.d("Init app context hook for package %s - complete", lpparam.packageName);
                             }
 
-                            // todo as enumeration:
+                            hooksHandlers = new ArrayList<>();
+                            hooksHandlers.add(new HostCardEmulationHooksHandler(lpparam, context));
+                            hooksHandlers.add(new HostNfcFEmulationHooksHandler(lpparam, context));
+                            hooksHandlers.add(new RawDataNfcTagsHooksHandler(lpparam, context));
 
-                            // apply hooks for emulation mode (normal)
-                            hceHooksHandler = new HostCardEmulationHooksHandler(lpparam, context);
-                            hceHooksHandler.applyHooks();
-
-                            // apply hooks for emulation mode (nfc-f)
-                            hnfHooksHandler = new HostNfcFEmulationHooksHandler(lpparam, context);
-                            hnfHooksHandler.applyHooks();
-
-                            // apply hooks for reader mode
-                            nfcTagsHooksHandler = new RawDataNfcTagsHooksHandler(lpparam, context);
-                            nfcTagsHooksHandler.applyHooks();
+                            for (HooksHandler handler : hooksHandlers) {
+                                handler.applyHooks();
+                            }
                         }
                     });
             XLog.d("Init app context hook for package %s - complete", lpparam.packageName);

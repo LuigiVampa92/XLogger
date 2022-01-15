@@ -1,13 +1,14 @@
-package com.luigivampa92.xlogger.xposed;
+package com.luigivampa92.xlogger.hooks;
 
 import android.util.Log;
 
 public class XLog {
 
+    private static final boolean LOG_ENABLED = true;  // todo ??
     private static final String LOG_TAG = "LV92_XLOGGER";
-    private static final String LOG_TAG_XPOSED = "Xposed";
     private static final int LOG_LEVEL = Log.VERBOSE;  // todo make buildconfig depend on buildtype !!
     private static final boolean LOG_TO_XPOSED = false;
+    private static final String LOG_TAG_XPOSED = "Xposed";
 
     private XLog() {}
 

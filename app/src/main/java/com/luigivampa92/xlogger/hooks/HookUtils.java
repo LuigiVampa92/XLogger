@@ -1,4 +1,4 @@
-package com.luigivampa92.xlogger.xposed;
+package com.luigivampa92.xlogger.hooks;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;

@@ -8,6 +8,10 @@ import com.luigivampa92.xlogger.data.DebugLastLogStorage
 
 class MainActivity : BaseActivity() {
 
+    // todo нормальный билдскрипт
+    // todo check for running module !
+    // todo make pcap file
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
