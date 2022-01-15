@@ -1,6 +1,7 @@
 package com.luigivampa92.xlogger.xposed;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -8,11 +9,15 @@ import android.content.pm.ResolveInfo;
 import android.nfc.cardemulation.HostNfcFService;
 import android.os.Bundle;
 
-import com.luigivampa92.xlogger.DataUtil;
+import com.luigivampa92.xlogger.BroadcastConstants;
+import com.luigivampa92.xlogger.DataUtils;
+import com.luigivampa92.xlogger.data.InteractionLog;
 import com.luigivampa92.xlogger.data.InteractionLogEntry;
+import com.luigivampa92.xlogger.data.InteractionType;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,50 +28,34 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class HostNfcFEmulationHooksHandler implements HooksHandler {
 
-    // todo пока что нихуя не логгируется ! доделать
-
     private final XC_LoadPackage.LoadPackageParam lpparam;
-    private final Context hookedAppcontext;
-    private Set<Class<? extends HostNfcFService>> hnfServices;
+    private final Context hookedAppContext;
+    private Set<Class<?>> hnfServices;
     private List<InteractionLogEntry> currentLogEntries;
 
-    public HostNfcFEmulationHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppcontext) {
+    public HostNfcFEmulationHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppContext) {
         this.lpparam = lpparam;
-        this.hookedAppcontext = hookedAppcontext;
+        this.hookedAppContext = hookedAppContext;
     }
 
     @Override
     public void applyHooks() {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N || !featuresSupported()) {
+        if (!androidVersionSupported() || !featuresSupported()) {
             return;
         }
         if (hnfServices == null) {
-            hnfServices = performHostNfcFServicesSearchByPackageManager(hookedAppcontext);
+            hnfServices = performHostNfcFServicesSearchByPackageManager(hookedAppContext);
             if (!hnfServices.isEmpty()) {
-                logHnfServiceList(lpparam, hnfServices);
+                HookUtils.logClassList(hnfServices, lpparam.packageName);
                 applyHnfHooks(lpparam, hnfServices);
             }
         }
     }
 
-    private void logHnfServiceList(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<? extends HostNfcFService>> hnfServices) {
-        try {
-            if (hnfServices != null && !hnfServices.isEmpty()) {
-                for (final Class<? extends HostNfcFService> serviceClass : hnfServices) {
-                    XLog.d("Package %s - hnf service found - %s", lpparam.packageName, serviceClass.getCanonicalName());
-                }
-            }
-        }
-        catch (Throwable e) {
-        }
-    }
-
-
-    @SuppressWarnings("unchecked")
     @SuppressLint("QueryPermissionsNeeded")
-    private Set<Class<? extends HostNfcFService>> performHostNfcFServicesSearchByPackageManager(Context context) {
-        HashSet<Class<? extends HostNfcFService>> result = new HashSet<>();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+    private Set<Class<?>> performHostNfcFServicesSearchByPackageManager(Context context) {
+        HashSet<Class<?>> result = new HashSet<>();
+        if (androidVersionSupported()) {
             Intent intent = new Intent();
             intent.setAction("android.nfc.cardemulation.action.HOST_NFCF_SERVICE");
             intent.setPackage(context.getPackageName());
@@ -77,8 +66,7 @@ public class HostNfcFEmulationHooksHandler implements HooksHandler {
                 try {
                     Class<?> targetClass = XposedHelpers.findClass(targetClassName, context.getClassLoader());
                     if (HostNfcFService.class.isAssignableFrom(targetClass) && !Modifier.isAbstract(targetClass.getModifiers())) {
-                        Class<? extends HostNfcFService> castedToHeirClass = (Class<? extends HostNfcFService>) targetClass;
-                        result.add(castedToHeirClass);
+                        result.add(targetClass);
                     }
                 } catch (ClassCastException e) {
                     XLog.e("Error while trying to cast a hnf service class - %s", targetClassName);
@@ -89,11 +77,10 @@ public class HostNfcFEmulationHooksHandler implements HooksHandler {
         return result;
     }
 
-    private void applyHnfHooks(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<? extends HostNfcFService>> hnfServices) {
+    private void applyHnfHooks(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<?>> hnfServices) {
         try {
             XLog.d("Apply hnf hooks for package %s - start", lpparam.packageName);
-            for (final Class<? extends HostNfcFService> serviceClass : hnfServices) {
-                applyHnfStartHookForService(serviceClass);
+            for (final Class<?> serviceClass : hnfServices) {
                 applyHnfStopHookForService(serviceClass);
                 applyHnfPacketHookForService(serviceClass);
             }
@@ -103,34 +90,113 @@ public class HostNfcFEmulationHooksHandler implements HooksHandler {
         }
     }
 
-    private void applyHnfStartHookForService(Class<? extends HostNfcFService> serviceClass) {
-
-        String targetMethodName = "onCreate";
-
-        XLog.d("Apply %s hook on %s - HNF - start", targetMethodName, serviceClass.getCanonicalName()); // todo remove
-        if (hasNonAbstractMethodImplementation(serviceClass, targetMethodName)) {
+    private void applyHnfPacketHookForService(Class<?> serviceClass) {
+        String targetMethodName = "processNfcFPacket";
+        XLog.d("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
+        if (HookUtils.hasNonAbstractMethodImplementation(serviceClass, targetMethodName)) {
             XposedHelpers.findAndHookMethod(
                     serviceClass,
                     targetMethodName,
+                    byte[].class,
+                    Bundle.class,
                     new XC_MethodHook() {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             super.afterHookedMethod(param);
-                            XLog.d("Emulation activated - %s - HNF - session record started", serviceClass.getCanonicalName());
+                            if (param.args.length > 0 && param.args[0] != null && param.args[0] instanceof byte[]) {
+                                byte[] cApdu = (byte[]) param.args[0];
+                                if (cApdu.length > 0) {
+                                    if (currentLogEntries == null) {
+                                        currentLogEntries = new ArrayList<>();
+                                        XLog.i("Emulation activated - session record started");
+                                    }
+                                    XLog.i("HCE RX: %s", DataUtils.toHexString(cApdu));
+                                    InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), cApdu, BroadcastConstants.PEER_TERMINAL, BroadcastConstants.PEER_DEVICE);
+                                    currentLogEntries.add(logEntry);
+                                } else {
+                                    XLog.i("HCE ERROR: received empty command apdu");
+                                }
+                            }
+
+                            Object result = param.getResultOrThrowable();
+                            if (result == null || param.hasThrowable() || result instanceof Throwable) {
+                                return;
+                            }
+
+                            if (result instanceof byte[]) {
+                                byte[] rApdu = (byte[]) result;
+                                if (rApdu.length > 0) {
+                                    if (currentLogEntries == null) {
+                                        currentLogEntries = new ArrayList<>();
+                                        XLog.i("Emulation activated - session record started");
+                                    }
+                                    if (!currentLogEntries.isEmpty()) {
+                                        InteractionLogEntry lastEntry = currentLogEntries.get(currentLogEntries.size() - 1);
+                                        boolean alreadyRecorded = Arrays.equals(lastEntry.getData(), rApdu);
+                                        if (alreadyRecorded) {
+                                            return;
+                                        }
+                                    }
+                                    XLog.i("HCE TX: %s", DataUtils.toHexString(rApdu));
+                                    InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_TERMINAL);
+                                    currentLogEntries.add(logEntry);
+                                } else {
+                                    XLog.i("HCE ERROR: transmitted empty response apdu");
+                                }
+                            }
                         }
                     });
-            XLog.d("Apply %s hook on %s - HNF - complete", targetMethodName, serviceClass.getCanonicalName()); // todo remove
+            XLog.d("Apply %s hook on %s - complete", targetMethodName, serviceClass.getCanonicalName());
         } else {
-            XLog.e("Apply %s hook on %s - HNF - error - method is abstract", targetMethodName, serviceClass.getCanonicalName());
+            XLog.d("Apply %s hook on %s - error - method is abstract", targetMethodName, serviceClass.getCanonicalName());
+        }
+
+        String callbackMethodName = "sendResponsePacket";
+        XLog.d("Apply %s hook on parent class - start", callbackMethodName);
+        try {
+            Class<?> abstractParentService = serviceClass.getSuperclass();
+            XposedHelpers.findAndHookMethod(
+                    abstractParentService,
+                    callbackMethodName,
+                    byte[].class,
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            super.afterHookedMethod(param);
+                            if (param != null && param.args.length > 0 && param.args[0] instanceof byte[]) {
+                                byte[] rApdu = (byte[]) param.args[0];
+                                if (rApdu.length > 0) {
+                                    if (currentLogEntries == null) {
+                                        currentLogEntries = new ArrayList<>();
+                                        XLog.i("Emulation activated - session record started");
+                                    }
+                                    if (!currentLogEntries.isEmpty()) {
+                                        InteractionLogEntry lastEntry = currentLogEntries.get(currentLogEntries.size() - 1);
+                                        boolean alreadyRecorded = Arrays.equals(lastEntry.getData(), rApdu);
+                                        if (alreadyRecorded) {
+                                            return;
+                                        }
+                                    }
+                                    XLog.i("HCE TX: %s", DataUtils.toHexString(rApdu));
+                                    InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_TERMINAL);
+                                    currentLogEntries.add(logEntry);
+                                } else {
+                                    XLog.i("HCE ERROR: transmitted empty response apdu");
+                                }
+                            }
+                        }
+                    }
+            );
+            XLog.d("Apply %s hook on parent class - complete", callbackMethodName);
+        } catch (Throwable e) {
+            XLog.d("Apply %s hook on parent class - error", callbackMethodName);
         }
     }
 
-    private void applyHnfStopHookForService(Class<? extends HostNfcFService> serviceClass) {
-
+    private void applyHnfStopHookForService(Class<?> serviceClass) {
         String targetMethodName = "onDeactivated";
-
-        XLog.d("Apply %s hook on %s - HNF - start", targetMethodName, serviceClass.getCanonicalName()); // todo remove
-        if (hasNonAbstractMethodImplementation(serviceClass, targetMethodName)) {
+        XLog.d("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
+        if (HookUtils.hasNonAbstractMethodImplementation(serviceClass, targetMethodName)) {
             XposedHelpers.findAndHookMethod(
                     serviceClass,
                     targetMethodName,
@@ -139,86 +205,30 @@ public class HostNfcFEmulationHooksHandler implements HooksHandler {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             super.afterHookedMethod(param);
-                            XLog.d("Emulation deactivated - %s - HNF - session record stopped", serviceClass.getCanonicalName());
+                            XLog.i("Emulation deactivated - %s - session record stopped", serviceClass.getCanonicalName());
+                            InteractionLog interactionLog = new InteractionLog(InteractionType.HCE_NFC_F, lpparam.packageName, serviceClass.getCanonicalName(), (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
+                            Intent sendInteractionLogRecordIntent = new Intent();
+                            sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
+                            sendInteractionLogRecordIntent.setComponent(new ComponentName(BroadcastConstants.XLOGGER_PACKAGE, BroadcastConstants.INTERACTION_LOG_RECEIVER));
+                            sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG_NFC_RAW_TAG);
+                            sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
+                            hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
+                            currentLogEntries = null;
                         }
                     });
-            XLog.d("Apply %s hook on %s - HNF - complete", targetMethodName, serviceClass.getCanonicalName()); // todo remove
+            XLog.d("Apply %s hook on %s - complete", targetMethodName, serviceClass.getCanonicalName());
         } else {
-            XLog.e("Apply %s hook on %s - HNF - error - method is abstract", targetMethodName, serviceClass.getCanonicalName());
+            XLog.d("Apply %s hook on %s - error - method is abstract", targetMethodName, serviceClass.getCanonicalName());
         }
-    }
-
-    private void applyHnfPacketHookForService(Class<? extends HostNfcFService> serviceClass) {
-        String targetMethodName = "processNfcFPacket";
-
-        XLog.d("Apply %s hook on %s - HNF - start", targetMethodName, serviceClass.getCanonicalName()); // todo remove
-        if (hasNonAbstractMethodImplementation(serviceClass, targetMethodName)) {
-            XposedHelpers.findAndHookMethod(
-                    serviceClass,
-                    targetMethodName,
-                    byte[].class,
-                    Bundle.class,
-                    new XC_MethodHook() {
-
-                        @Override
-                        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                            super.beforeHookedMethod(param);
-                            if (param.args.length > 0 && param.args[0] != null && param.args[0] instanceof byte[]) {
-                                byte[] cApdu = (byte[]) param.args[0];
-                                if (cApdu.length > 0) {
-                                    XLog.d("HNF RX: %s", DataUtil.toHexString(cApdu));
-                                } else {
-                                    XLog.e("HNF ERROR: received empty command apdu");
-                                }
-                            }
-                        }
-
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            super.afterHookedMethod(param);
-                            Object result = param.getResult();
-                            if (result != null && result instanceof byte[]) {
-                                byte[] rApdu = (byte[]) result;
-                                if (rApdu.length > 0) {
-                                    XLog.d("HNF TX: %s", DataUtil.toHexString(rApdu));
-                                } else {
-                                    XLog.e("HNF ERROR: transmitted empty response apdu");
-                                }
-                            }
-                        }
-                    });
-
-            XLog.d("Apply %s hook on %s - HNF - complete", targetMethodName, serviceClass.getCanonicalName()); // todo remove
-        } else {
-            XLog.e("Apply %s hook on %s - HNF - error - method is abstract", targetMethodName, serviceClass.getCanonicalName());
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-    // todo static !
-    private boolean hasNonAbstractMethodImplementation(Class<?> cls, String methodName) {
-        Method[] methods = cls.getDeclaredMethods();
-        for (Method method : methods) {
-            if (!Modifier.isAbstract(method.getModifiers()) && method.getName().equals(methodName)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private boolean featuresSupported() {
-        boolean hasNfcFeature = hookedAppcontext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC);
-        boolean hasNfcFHceFeature = hookedAppcontext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION_NFCF);
+        boolean hasNfcFeature = hookedAppContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC);
+        boolean hasNfcFHceFeature = hookedAppContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION_NFCF);
         return hasNfcFeature && hasNfcFHceFeature;
+    }
+
+    private boolean androidVersionSupported() {
+        return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N;
     }
 }
