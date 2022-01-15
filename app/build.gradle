@@ -5,28 +5,36 @@ plugins {
     id 'kotlin-parcelize'
 }
 
+def appVersionCode = 1
+def appVersionName = "1.0"
+
 android {
     compileSdk 31
-
     defaultConfig {
         applicationId "com.luigivampa92.xlogger"
         minSdk 23
         targetSdk 31
-        versionCode 1
-        versionName "1.0"
-
+        versionCode appVersionCode
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "String", "LOG_TAG", "\"XLOGGER\""
+        buildConfigField "int", "LOG_LEVEL", "android.util.Log.INFO"
     }
-
     buildTypes {
         release {
-            minifyEnabled false
+            buildConfigField "Boolean", "LOGS_ENABLED", "false"
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            buildConfigField "Boolean", "LOGS_ENABLED", "true"
+            minifyEnabled false
         }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+        encoding "UTF-8"
     }
 }
 
