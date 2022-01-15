@@ -267,7 +267,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             super.afterHookedMethod(param);
-                            XLog.d("Emulation deactivated - %s - session record stopped", serviceClass.getCanonicalName());
+                            XLog.i("Emulation deactivated - %s - session record stopped", serviceClass.getCanonicalName());
                             InteractionLog interactionLog = new InteractionLog(InteractionType.HCE_NORMAL, lpparam.packageName, serviceClass.getCanonicalName(), (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
                             Intent sendInteractionLogRecordIntent = new Intent();
                             sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
