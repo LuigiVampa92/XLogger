@@ -11,9 +11,9 @@ import android.os.Bundle;
 
 import com.luigivampa92.xlogger.BroadcastConstants;
 import com.luigivampa92.xlogger.DataUtils;
-import com.luigivampa92.xlogger.data.InteractionLog;
-import com.luigivampa92.xlogger.data.InteractionLogEntry;
-import com.luigivampa92.xlogger.data.InteractionType;
+import com.luigivampa92.xlogger.domain.InteractionLog;
+import com.luigivampa92.xlogger.domain.InteractionLogEntry;
+import com.luigivampa92.xlogger.domain.InteractionType;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;

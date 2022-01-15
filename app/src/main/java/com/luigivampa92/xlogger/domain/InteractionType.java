@@ -1,4 +1,4 @@
-package com.luigivampa92.xlogger.data;
+package com.luigivampa92.xlogger.domain;
 
 public enum InteractionType {
 

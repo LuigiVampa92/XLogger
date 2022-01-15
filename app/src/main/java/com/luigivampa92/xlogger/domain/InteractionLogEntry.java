@@ -1,7 +1,9 @@
-package com.luigivampa92.xlogger.data;
+package com.luigivampa92.xlogger.domain;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.luigivampa92.xlogger.DataUtils;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -84,5 +86,15 @@ public final class InteractionLogEntry implements Parcelable {
         int result = Objects.hash(timestamp, sender, receiver);
         result = 31 * result + Arrays.hashCode(data);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "InteractionLogEntry{" +
+                "timestamp=" + timestamp +
+                ", data=" + DataUtils.toHexString(data) +
+                ", sender='" + sender + '\'' +
+                ", receiver='" + receiver + '\'' +
+                '}';
     }
 }

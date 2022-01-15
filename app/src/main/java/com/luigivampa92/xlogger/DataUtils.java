@@ -15,4 +15,14 @@ public final class DataUtils {
         }
         return stringBuilder.toString();
     }
+
+    public static String toHexStringLower(byte[] array) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (array != null && array.length > 0) {
+            for (int i = 0; i < array.length; ++i) {
+                stringBuilder.append(String.format("%02x", array[i]));
+            }
+        }
+        return stringBuilder.toString();
+    }
 }

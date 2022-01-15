@@ -4,13 +4,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.luigivampa92.xlogger.data.DebugLastLogStorage;
-import com.luigivampa92.xlogger.data.InteractionLog;
-import com.luigivampa92.xlogger.data.InteractionLogEntry;
+import com.luigivampa92.xlogger.data.db.AppDatabase;
+import com.luigivampa92.xlogger.data.db.InteractionLogEntity;
+import com.luigivampa92.xlogger.domain.InteractionLog;
 import com.luigivampa92.xlogger.hooks.XLog;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
 
@@ -31,41 +34,25 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
             return;
         }
 
-
-        XLog.i("*******");
-        XLog.i("*******");
-        XLog.i("*******");
-        XLog.i("INTERACTION LOG RECEIVED");
-        XLog.i("APP - %s", interactionLog.getPackageName());
-        XLog.i("TYPE - %s", interactionLog.getType().name());
-        XLog.i("SERVICE - %s", interactionLog.getServiceName());
-        XLog.i("TIME - %s", new SimpleDateFormat("dd.MM.yyyy, HH:mm:ss").format(new Date(interactionLog.getTimestamp())));
-        XLog.i("DURATION - %d ms", interactionLog.getDuration());
-        for (InteractionLogEntry logEntry : interactionLog.getEntries()) {
-            XLog.i("[%s] %s : %s", new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(logEntry.getTimestamp())), logEntry.getSender(), DataUtils.toHexString(logEntry.getData()));
-        }
-        XLog.i("*******");
-        XLog.i("*******");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("*******\n");
-        sb.append("INTERACTION LOG RECEIVED\n");
-        sb.append(String.format("APP - %s\n", interactionLog.getPackageName()));
-        sb.append(String.format("TYPE - %s\n", interactionLog.getType().name()));
-        sb.append(String.format("SERVICE - %s\n", interactionLog.getServiceName()));
-        sb.append(String.format("TIME - %s\n", new SimpleDateFormat("dd.MM.yyyy, HH:mm:ss").format(new Date(interactionLog.getTimestamp()))));
-        sb.append(String.format("DURATION - %d ms\n", interactionLog.getDuration()));
-        sb.append("*******\n");
-        for (InteractionLogEntry logEntry : interactionLog.getEntries()) {
-            sb.append(String.format("[%s] %s : %s\n", new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(logEntry.getTimestamp())), logEntry.getSender(), DataUtils.toHexString(logEntry.getData())));
-        }
-        sb.append("*******\n");
-
-
-
-        DebugLastLogStorage storage = new DebugLastLogStorage(context);
-        storage.saveLastLog(sb.toString());
-
-
+        AppDatabase db = AppDatabase.getInstance(context.getApplicationContext());
+        InteractionLogEntity entity = InteractionLogEntity.fromInteractionLog(interactionLog);
+        XLog.i("save entity - start");
+        Disposable d = db.interactionLogDao().insert(entity)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                new Action() {
+                    @Override
+                    public void run() throws Exception {
+                        XLog.i("save entity - success");
+                    }
+                },
+                new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        XLog.i("save entity - error");
+                    }
+                }
+        );
     }
 }
