@@ -5,8 +5,5 @@
     <string-array name="xposed_scope_nfc">
         <item>com.google.android.gms</item>
         <item>com.google.android.apps.walletnfcrel</item>
-        <item>com.luigivampa92.nfcshare</item>   <!-- TODO REMOVE !!! -->
-        <item>cz.pb.emv.analytic_tool</item>   <!-- TODO REMOVE !!! -->
-        <item>com.github.devnied.emvnfccard</item>   <!-- TODO REMOVE !!! -->
     </string-array>
 </resources>
