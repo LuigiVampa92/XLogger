@@ -24,6 +24,8 @@ class InteractionLogViewHolder (
     private val onItemClickListener: ((InteractionLog) -> Unit)? = null,
 ) : RecyclerView.ViewHolder(inflater.inflate(R.layout.item_interaction_log, container, false)) {
 
+    // todo fix markup
+
     val viewForeground: ConstraintLayout
     private val imageAppIcon: ImageView
     private val textAppName: TextView
@@ -70,12 +72,18 @@ class InteractionLogViewHolder (
         }
     }
 
+    // todo texts for payment card, nearby, transit card etc
+    // todo isodep is not text
+    // todo nfc f emulation - separated
+
     private fun getTitleText(log: InteractionLog): String {
         return when (log.type) {
             InteractionType.NFC_TAG_RAW -> "Read ${log.serviceName} NFC card"
             else -> "Emulate NFC card"
         }
     }
+
+    // todo common logic
 
     private fun setAppData(context: Context, log: InteractionLog) {
         val packageManager = context.packageManager

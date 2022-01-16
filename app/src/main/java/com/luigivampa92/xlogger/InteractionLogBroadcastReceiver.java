@@ -26,8 +26,6 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    // todo get calling package !
-
     private void handleLogRawNfcTag(Context context, Intent intent) {
         InteractionLog interactionLog = intent.getParcelableExtra(BroadcastConstants.EXTRA_DATA);
         if (interactionLog == null || interactionLog.getEntries() == null || interactionLog.getEntries().isEmpty()) {
@@ -36,8 +34,8 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
 
         AppDatabase db = AppDatabase.getInstance(context.getApplicationContext());
         InteractionLogEntity entity = InteractionLogEntity.fromInteractionLog(interactionLog);
-        XLog.i("save entity - start");
-        Disposable d = db.interactionLogDao().insert(entity)
+        XLog.i("save entity - start"); // todo some other texts ?
+        Disposable d = db.interactionLogDao().insert(entity)  // todo wtf ?
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(

@@ -7,6 +7,7 @@ public class BroadcastConstants {
     public static final String EXTRA_DATA = "data";
 
     // todo move to proper place
+    // todo dedicated enum class ?
     public static final String PEER_DEVICE = "DEVICE";
     public static final String PEER_CARD = "CARD";
     public static final String PEER_TERMINAL = "TERMINAL";

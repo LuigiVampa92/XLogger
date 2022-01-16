@@ -53,6 +53,8 @@ class InteractionLogTypeConverters {
             .toByteArray()
     }
 
+    // todo different separators or universal scheme ! or GSON
+
     private fun getDelimeterCharForSingleEntry() = "^"
 
     private fun getDelimeterCharForEntries() = "*"

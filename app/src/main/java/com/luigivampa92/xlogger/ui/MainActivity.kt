@@ -18,12 +18,16 @@ import java.util.*
 class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTouchHelperListener {
 
     // todo нормальный билдскрипт
+    // todo app icon
     // todo check for uses-feature ?
     // todo check for running module ! - notify if not working
     // todo mifare class mb ??
     // todo make pcap file
     // todo ensure dark theme
     // todo no saved records
+
+
+    // todo pagination !
 
     private lateinit var recyclerViewLogRecords: RecyclerView
     private lateinit var logRecordsAdapter: InteractionLogAdapter
