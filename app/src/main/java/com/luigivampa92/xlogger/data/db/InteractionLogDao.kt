@@ -10,7 +10,7 @@ import io.reactivex.Single
 @Dao
 interface InteractionLogDao {
 
-    @get:Query("SELECT * FROM interaction_logs")
+    @get:Query("SELECT * FROM interaction_logs ORDER BY timestamp DESC")
     val all: Single<List<InteractionLogEntity>>
 
     @Insert

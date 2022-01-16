@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="8dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/view_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/color_red"
+        tools:visibility="gone">
+
+        <ImageView
+            android:id="@+id/img_icon_delete"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="8dp"
+            app:srcCompat="@drawable/ic_delete"
+            app:layout_constraintDimensionRatio="W, 1:1"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:ignore="ContentDescription"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/view_foreground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/color_item_log_background"
+        android:foreground="?selectableItemBackground"
+        android:focusable="true"
+        android:clickable="true">
+
+        <ImageView
+            android:id="@+id/img_app_icon"
+            android:layout_width="@dimen/size_app_icon"
+            android:layout_height="@dimen/size_app_icon"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            app:srcCompat="@android:drawable/sym_def_app_icon"
+            app:layout_constraintDimensionRatio="W, 1:1"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:ignore="ContentDescription"
+            />
+
+        <TextView
+            android:id="@+id/text_app_name"
+            android:layout_width="@dimen/size_app_description"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:textAlignment="center"
+            android:singleLine="true"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/color_main"
+            android:textSize="12dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/img_app_icon"
+            tools:text="App name"
+            />
+
+        <ImageView
+            android:id="@+id/img_type_iface_background"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginEnd="-4dp"
+            android:layout_marginBottom="-4dp"
+            android:visibility="gone"
+            app:srcCompat="@drawable/bg_circle_solid"
+            app:layout_constraintDimensionRatio="W, 1:1"
+            app:layout_constraintBottom_toBottomOf="@+id/img_app_icon"
+            app:layout_constraintEnd_toEndOf="@+id/img_app_icon"
+            tools:visibility="visible"
+            tools:ignore="ContentDescription"
+            />
+
+        <ImageView
+            android:id="@+id/img_type_iface_icon"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="2dp"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_interaction_type_nfc"
+            app:layout_constraintDimensionRatio="W, 1:1"
+            app:layout_constraintTop_toTopOf="@+id/img_type_iface_background"
+            app:layout_constraintBottom_toBottomOf="@+id/img_type_iface_background"
+            app:layout_constraintStart_toStartOf="@+id/img_type_iface_background"
+            app:layout_constraintEnd_toEndOf="@+id/img_type_iface_background"
+            tools:visibility="visible"
+            tools:ignore="ContentDescription"
+            />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrier_app_info"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:barrierDirection="end"
+            app:constraint_referenced_ids="img_app_icon, text_app_name"
+            />
+
+        <TextView
+            android:id="@+id/text_log_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:textAlignment="center"
+            android:singleLine="true"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/color_main"
+            android:textSize="12dp"
+            app:layout_constraintStart_toEndOf="@+id/barrier_app_info"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Log title"
+            />
+
+        <TextView
+            android:id="@+id/text_log_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="36dp"
+            android:layout_marginEnd="16dp"
+            android:textAlignment="viewStart"
+            android:singleLine="true"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/color_main_secondary"
+            android:textSize="12dp"
+            app:layout_constraintStart_toEndOf="@+id/barrier_app_info"
+            app:layout_constraintTop_toBottomOf="@+id/text_log_title"
+            tools:text="DATE: ..."
+            />
+
+        <TextView
+            android:id="@+id/text_log_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="36dp"
+            android:layout_marginEnd="16dp"
+            android:textAlignment="viewStart"
+            android:singleLine="true"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/color_main_secondary"
+            android:textSize="12dp"
+            app:layout_constraintStart_toEndOf="@+id/barrier_app_info"
+            app:layout_constraintTop_toBottomOf="@+id/text_log_date"
+            tools:text="TIME: ..."
+            />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrier_bottom"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="img_app_icon, text_app_name, text_log_title, text_log_date, text_log_time"
+            />
+
+        <View
+            android:id="@+id/view_bottom_gap"
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/barrier_bottom"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>

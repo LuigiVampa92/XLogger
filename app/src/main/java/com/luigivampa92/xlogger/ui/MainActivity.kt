@@ -1,29 +1,46 @@
 package com.luigivampa92.xlogger.ui
 
 import android.os.Bundle
-import android.view.View
-import android.widget.TextView
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.luigivampa92.xlogger.DataUtils
 import com.luigivampa92.xlogger.R
 import com.luigivampa92.xlogger.data.db.AppDatabase
 import com.luigivampa92.xlogger.domain.InteractionLog
-import com.luigivampa92.xlogger.hooks.XLog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MainActivity : BaseActivity() {
+class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTouchHelperListener {
 
     // todo нормальный билдскрипт
-    // todo check for running module !
+    // todo check for uses-feature ?
+    // todo check for running module ! - notify if not working
+    // todo mifare class mb ??
     // todo make pcap file
+    // todo ensure dark theme
+    // todo no saved records
+
+    private lateinit var recyclerViewLogRecords: RecyclerView
+    private lateinit var logRecordsAdapter: InteractionLogAdapter
+    private lateinit var logRecordsLayoutManager: LinearLayoutManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val textView = findViewById<View>(R.id.text_debug) as TextView
+
+        recyclerViewLogRecords = findViewById(R.id.recycler_view_log_records)
+        logRecordsAdapter = InteractionLogAdapter(this::showLogDetails)
+        logRecordsLayoutManager = LinearLayoutManager(this)
+        recyclerViewLogRecords.adapter = logRecordsAdapter
+        recyclerViewLogRecords.layoutManager = logRecordsLayoutManager
+        recyclerViewLogRecords.itemAnimator = DefaultItemAnimator()
+        val itemTouchHelperCallback = RecyclerViewItemTouchHelper(0, ItemTouchHelper.LEFT, this)
+        ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(recyclerViewLogRecords)
 
         val db = AppDatabase.getInstance(this.applicationContext)
         val d = db.interactionLogDao().all
@@ -31,21 +48,29 @@ class MainActivity : BaseActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    it.forEach {
-                        XLog.d(it.toString())
-                    }
+//                    it.forEach {
+//                        XLog.d(it.toString())
+//                    }
 
-                    val text = mutableListOf<String>().apply {
-                        it.forEach {
-                            this.add(entryToText(it.toInteractionLog()))
-                        }
-                    }.joinToString(separator = "\n")
-                    textView.text = text
+//                    val text = mutableListOf<String>().apply {
+//                        it.forEach {
+//                            this.add(entryToText(it.toInteractionLog()))
+//                        }
+//                    }.joinToString(separator = "\n")
+//                    textView.text = text
+
+                    val logRecords = it.map { it.toInteractionLog() }
+                    logRecordsAdapter.setLogRecords(logRecords)
+
                 },
                 {
-                    textView.text = "LOGS: ERROR"
+                    val a = "a"
                 }
             )
+    }
+
+    private fun showLogDetails(log: InteractionLog) {
+
     }
 
     private fun entryToShortText(log: InteractionLog): String {
@@ -79,5 +104,12 @@ class MainActivity : BaseActivity() {
         }
         sb.append("*******\n")
         return sb.toString()
+    }
+
+    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int, position: Int) {
+        val record = logRecordsAdapter.getItem(position)
+//        deleteRecord(record.value)
+        logRecordsAdapter.removeItem(position)
+//        showNoErrors()
     }
 }
