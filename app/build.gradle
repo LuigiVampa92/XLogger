@@ -9,11 +9,11 @@ def appVersionCode = 1
 def appVersionName = "1.0"
 
 android {
-    compileSdk 31
+    compileSdk 33
     defaultConfig {
         applicationId "com.luigivampa92.xlogger"
         minSdk 23
-        targetSdk 31
+        targetSdk 33
         versionCode appVersionCode
         versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

@@ -1,6 +1,7 @@
 package com.luigivampa92.xlogger.ui
 
 import android.os.Bundle
+import android.view.View
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -9,6 +10,7 @@ import com.luigivampa92.xlogger.DataUtils
 import com.luigivampa92.xlogger.R
 import com.luigivampa92.xlogger.data.db.AppDatabase
 import com.luigivampa92.xlogger.domain.InteractionLog
+import com.luigivampa92.xlogger.hooks.XposedModuleStateDetector
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import java.lang.StringBuilder
@@ -29,6 +31,8 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
 
     // todo pagination !
 
+    private lateinit var bannerModuleDisabled: View
+
     private lateinit var recyclerViewLogRecords: RecyclerView
     private lateinit var logRecordsAdapter: InteractionLogAdapter
     private lateinit var logRecordsLayoutManager: LinearLayoutManager
@@ -36,6 +40,9 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        bannerModuleDisabled = findViewById(R.id.banner_module_disabled)
+        bannerModuleDisabled.visibility = if (XposedModuleStateDetector.isXposedModuleActive()) View.GONE else View.VISIBLE
 
         recyclerViewLogRecords = findViewById(R.id.recycler_view_log_records)
         logRecordsAdapter = InteractionLogAdapter(this::showLogDetails)

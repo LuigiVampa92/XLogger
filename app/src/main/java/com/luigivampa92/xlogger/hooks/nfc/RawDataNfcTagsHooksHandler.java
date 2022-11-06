@@ -1,4 +1,4 @@
-package com.luigivampa92.xlogger.hooks;
+package com.luigivampa92.xlogger.hooks.nfc;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,6 +17,8 @@ import com.luigivampa92.xlogger.DataUtils;
 import com.luigivampa92.xlogger.domain.InteractionLog;
 import com.luigivampa92.xlogger.domain.InteractionLogEntry;
 import com.luigivampa92.xlogger.domain.InteractionType;
+import com.luigivampa92.xlogger.hooks.HooksHandler;
+import com.luigivampa92.xlogger.hooks.XLog;
 
 import java.util.ArrayList;
 import java.util.List;
