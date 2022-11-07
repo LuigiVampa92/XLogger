@@ -22,92 +22,93 @@ public class BluetoothLeScannerHooksHandler implements HooksHandler {
 
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppContext;
+    private int verbosityLevelForLogs = XLog.SILENT;
 
-    public BluetoothLeScannerHooksHandler(final XC_LoadPackage.LoadPackageParam lpparam, final Context hookedAppContext) {
+    public BluetoothLeScannerHooksHandler(final XC_LoadPackage.LoadPackageParam lpparam, final Context hookedAppContext, int verbosityLevelForLogs) {
         this.lpparam = lpparam;
         this.hookedAppContext = hookedAppContext;
+        this.verbosityLevelForLogs = verbosityLevelForLogs;
     }
 
     @Override
     public void applyHooks() {
+        if (verbosityLevelForLogs <= XLog.DEBUG) {
 
-        // there are three methods to start ble scanning - one for scanning all devices and two more for scanning with filters:
-        // scanner.startScan(callback);
-        // scanner.startScan(filters, settings, callback);
-        // scanner.startScan(filters, settings, pendingintent);
-
-        XposedHelpers.findAndHookMethod(
-                BluetoothLeScanner.class,
-                "startScan",
-                ScanCallback.class,
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        super.afterHookedMethod(param);
-                        XLog.d("%s - Device started BLE scanning", lpparam.packageName);
+            // there are three methods to start ble scanning - one for scanning all devices and two more for scanning with filters:
+            // scanner.startScan(callback);
+            // scanner.startScan(filters, settings, callback);
+            // scanner.startScan(filters, settings, pendingintent);
+            XposedHelpers.findAndHookMethod(
+                    BluetoothLeScanner.class,
+                    "startScan",
+                    ScanCallback.class,
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            super.afterHookedMethod(param);
+                            XLog.d("%s - Device started BLE scanning", lpparam.packageName);
+                        }
                     }
-                }
-        );
-
-        XposedHelpers.findAndHookMethod(
-                BluetoothLeScanner.class,
-                "startScan",
-                List.class,
-                ScanSettings.class,
-                ScanCallback.class,
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        super.afterHookedMethod(param);
-                        handleScanningStartedDataMethodParameter(param);
+            );
+            XposedHelpers.findAndHookMethod(
+                    BluetoothLeScanner.class,
+                    "startScan",
+                    List.class,
+                    ScanSettings.class,
+                    ScanCallback.class,
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            super.afterHookedMethod(param);
+                            handleScanningStartedDataMethodParameter(param);
+                        }
                     }
-                }
-        );
-
-        XposedHelpers.findAndHookMethod(
-                BluetoothLeScanner.class,
-                "startScan",
-                List.class,
-                ScanSettings.class,
-                PendingIntent.class,
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        super.afterHookedMethod(param);
-                        handleScanningStartedDataMethodParameter(param);
+            );
+            XposedHelpers.findAndHookMethod(
+                    BluetoothLeScanner.class,
+                    "startScan",
+                    List.class,
+                    ScanSettings.class,
+                    PendingIntent.class,
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            super.afterHookedMethod(param);
+                            handleScanningStartedDataMethodParameter(param);
+                        }
                     }
-                }
-        );
+            );
 
-        // there are two methods to stop scanning that are basically the same for the purposes of this app
-        // scanner.stopScan(callback);
-        // scanner.stopScan(pendingintent);
-
-        XposedHelpers.findAndHookMethod(
-                BluetoothLeScanner.class,
-                "stopScan",
-                ScanCallback.class,
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        super.afterHookedMethod(param);
-                        handleScanningStopped();
-                    }
-                }
-        );
-
-        XposedHelpers.findAndHookMethod(
-                BluetoothLeScanner.class,
-                "stopScan",
-                PendingIntent.class,
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        super.afterHookedMethod(param);
-                        handleScanningStopped();
-                    }
-                }
-        );
+            // there are two methods to stop scanning that are basically the same for the purposes of this app
+            // scanner.stopScan(callback);
+            // scanner.stopScan(pendingintent);
+            if (verbosityLevelForLogs <= XLog.VERBOSE) {
+                XposedHelpers.findAndHookMethod(
+                        BluetoothLeScanner.class,
+                        "stopScan",
+                        ScanCallback.class,
+                        new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                super.afterHookedMethod(param);
+                                handleScanningStopped();
+                            }
+                        }
+                );
+                XposedHelpers.findAndHookMethod(
+                        BluetoothLeScanner.class,
+                        "stopScan",
+                        PendingIntent.class,
+                        new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                super.afterHookedMethod(param);
+                                handleScanningStopped();
+                            }
+                        }
+                );
+            }
+        }
     }
 
     private void handleScanningStartedDataMethodParameter(final XC_MethodHook.MethodHookParam param) {
@@ -131,8 +132,7 @@ public class BluetoothLeScannerHooksHandler implements HooksHandler {
         XLog.d(stringBuilder.toString());
     }
 
-    // logging of scanning stop is for now disabled, because this information seems useless
     private void handleScanningStopped() {
-//        XLog.d("%s - Device stopped BLE scanning", lpparam.packageName);
+        XLog.v("%s - Device stopped BLE scanning", lpparam.packageName);
     }
 }

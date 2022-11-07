@@ -40,7 +40,7 @@ public class HooksApplicator implements IXposedHookLoadPackage {
                         protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                             super.beforeHookedMethod(param);
                             if (!(param.thisObject instanceof Application)) {
-                                XLog.e("Init app context hook for package %s - error - received object is not a context", lpparam.packageName);
+                                XLog.d("Init app context hook for package %s - error - received object is not a context", lpparam.packageName);
                                 return;
                             }
                             if (context == null) {
@@ -51,7 +51,7 @@ public class HooksApplicator implements IXposedHookLoadPackage {
                         }
                     });
         } catch (Throwable e) {
-            XLog.e("Init app context hook for package %s - error", lpparam.packageName, e);
+            XLog.d("Init app context hook for package %s - error", lpparam.packageName);
         }
     }
 
@@ -77,9 +77,9 @@ public class HooksApplicator implements IXposedHookLoadPackage {
             XLog.d("Bluetooth hooks for package %s will NOT be applied - app does not use bluetooth", lpparam.packageName);
         } else {
             XLog.d("Apply Bluetooth hooks for package %s - start", lpparam.packageName);
-            hooksHandlers.add(new BluetoothHooksHandler(lpparam, hookedAppContext));
-            hooksHandlers.add(new BluetoothLeScannerHooksHandler(lpparam, hookedAppContext));
-            hooksHandlers.add(new BluetoothLeAdvertiserHooksHandler(lpparam, hookedAppContext));
+            hooksHandlers.add(new BluetoothHooksHandler(lpparam, hookedAppContext, XLog.INFO));
+            hooksHandlers.add(new BluetoothLeScannerHooksHandler(lpparam, hookedAppContext, XLog.INFO));
+            hooksHandlers.add(new BluetoothLeAdvertiserHooksHandler(lpparam, hookedAppContext, XLog.INFO));
             XLog.d("Apply Bluetooth hooks for package %s - complete", lpparam.packageName);
         }
 

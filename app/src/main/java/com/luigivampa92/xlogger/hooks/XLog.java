@@ -12,6 +12,11 @@ public class XLog {
     private static final boolean LOG_TO_XPOSED = false;
     private static final String LOG_TAG_XPOSED = "Xposed";
 
+    public static final int SILENT = Log.ASSERT;
+    public static final int INFO = Log.INFO;
+    public static final int DEBUG = Log.DEBUG;
+    public static final int VERBOSE = Log.VERBOSE;
+
     private XLog() {
         throw new IllegalAccessError("No instantiation!");
     }

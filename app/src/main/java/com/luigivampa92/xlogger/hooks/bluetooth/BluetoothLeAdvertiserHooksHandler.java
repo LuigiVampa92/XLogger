@@ -22,10 +22,12 @@ public class BluetoothLeAdvertiserHooksHandler implements HooksHandler {
 
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppContext;
+    private int verbosityLevelForLogs = XLog.SILENT;
 
-    public BluetoothLeAdvertiserHooksHandler(final XC_LoadPackage.LoadPackageParam lpparam, final Context hookedAppContext) {
+    public BluetoothLeAdvertiserHooksHandler(final XC_LoadPackage.LoadPackageParam lpparam, final Context hookedAppContext, int verbosityLevelForLogs) {
         this.lpparam = lpparam;
         this.hookedAppContext = hookedAppContext;
+        this.verbosityLevelForLogs = verbosityLevelForLogs;
     }
 
     @Override
@@ -35,34 +37,37 @@ public class BluetoothLeAdvertiserHooksHandler implements HooksHandler {
         // bluetoothLeAdvertiser.startAdvertising(settings, data, callback);
         // bluetoothLeAdvertiser.startAdvertising(settings, data, scanresponse, callback);
         // but the first method just falls into the second one with null in 3rd param
-        XposedHelpers.findAndHookMethod(
-                BluetoothLeAdvertiser.class,
-                "startAdvertising",
-                AdvertiseSettings.class,
-                AdvertiseData.class,
-                AdvertiseData.class,
-                AdvertiseCallback.class,
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        super.afterHookedMethod(param);
-                        handleAdvertiseStartedDataMethodParameter(param);
+        if (verbosityLevelForLogs <= XLog.DEBUG) {
+            XposedHelpers.findAndHookMethod(
+                    BluetoothLeAdvertiser.class,
+                    "startAdvertising",
+                    AdvertiseSettings.class,
+                    AdvertiseData.class,
+                    AdvertiseData.class,
+                    AdvertiseCallback.class,
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            super.afterHookedMethod(param);
+                            handleAdvertiseStartedDataMethodParameter(param);
+                        }
                     }
-                }
-        );
-
-        XposedHelpers.findAndHookMethod(
-                BluetoothLeAdvertiser.class,
-                "stopAdvertising",
-                AdvertiseCallback.class,
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        super.afterHookedMethod(param);
-                        handleAdvertiseStop();
-                    }
-                }
-        );
+            );
+            if (verbosityLevelForLogs <= XLog.VERBOSE) {
+                XposedHelpers.findAndHookMethod(
+                        BluetoothLeAdvertiser.class,
+                        "stopAdvertising",
+                        AdvertiseCallback.class,
+                        new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                super.afterHookedMethod(param);
+                                handleAdvertiseStop();
+                            }
+                        }
+                );
+            }
+        }
 
         // on android 9+ new ble api methods were added, that now operate with advertising sets
         // old start and stop advertising methods call these new advertising set methods under the hood
@@ -74,97 +79,100 @@ public class BluetoothLeAdvertiserHooksHandler implements HooksHandler {
         // bluetoothLeAdvertiser.startAdvertisingSet(params, advertisedata, scanresponse, periodicParams, periodicData, duration, maxExAdvEvents, callback);
         // bluetoothLeAdvertiser.startAdvertisingSet(params, advertisedata, scanresponse, periodicParams, periodicData, duration, maxExAdvEvents, callback, handler);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-
-            XposedHelpers.findAndHookMethod(
-                    BluetoothLeAdvertiser.class,
-                    "startAdvertisingSet",
-                    AdvertisingSetParameters.class,
-                    AdvertiseData.class,
-                    AdvertiseData.class,
-                    PeriodicAdvertisingParameters.class,
-                    AdvertiseData.class,
-                    AdvertisingSetCallback.class,
-                    new XC_MethodHook() {
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            super.afterHookedMethod(param);
-                            handleAdvertiseStartedDataMethodParameter(param);
+            if (verbosityLevelForLogs <= XLog.DEBUG) {
+                XposedHelpers.findAndHookMethod(
+                        BluetoothLeAdvertiser.class,
+                        "startAdvertisingSet",
+                        AdvertisingSetParameters.class,
+                        AdvertiseData.class,
+                        AdvertiseData.class,
+                        PeriodicAdvertisingParameters.class,
+                        AdvertiseData.class,
+                        AdvertisingSetCallback.class,
+                        new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                super.afterHookedMethod(param);
+                                handleAdvertiseStartedDataMethodParameter(param);
+                            }
                         }
-                    }
-            );
+                );
 
-            XposedHelpers.findAndHookMethod(
-                    BluetoothLeAdvertiser.class,
-                    "startAdvertisingSet",
-                    AdvertisingSetParameters.class,
-                    AdvertiseData.class,
-                    AdvertiseData.class,
-                    PeriodicAdvertisingParameters.class,
-                    AdvertiseData.class,
-                    AdvertisingSetCallback.class,
-                    Handler.class,
-                    new XC_MethodHook() {
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            super.afterHookedMethod(param);
-                            handleAdvertiseStartedDataMethodParameter(param);
+                XposedHelpers.findAndHookMethod(
+                        BluetoothLeAdvertiser.class,
+                        "startAdvertisingSet",
+                        AdvertisingSetParameters.class,
+                        AdvertiseData.class,
+                        AdvertiseData.class,
+                        PeriodicAdvertisingParameters.class,
+                        AdvertiseData.class,
+                        AdvertisingSetCallback.class,
+                        Handler.class,
+                        new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                super.afterHookedMethod(param);
+                                handleAdvertiseStartedDataMethodParameter(param);
+                            }
                         }
-                    }
-            );
+                );
 
-            XposedHelpers.findAndHookMethod(
-                    BluetoothLeAdvertiser.class,
-                    "startAdvertisingSet",
-                    AdvertisingSetParameters.class,
-                    AdvertiseData.class,
-                    AdvertiseData.class,
-                    PeriodicAdvertisingParameters.class,
-                    AdvertiseData.class,
-                    int.class,
-                    int.class,
-                    AdvertisingSetCallback.class,
-                    new XC_MethodHook() {
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            super.afterHookedMethod(param);
-                            handleAdvertiseStartedDataMethodParameter(param);
+                XposedHelpers.findAndHookMethod(
+                        BluetoothLeAdvertiser.class,
+                        "startAdvertisingSet",
+                        AdvertisingSetParameters.class,
+                        AdvertiseData.class,
+                        AdvertiseData.class,
+                        PeriodicAdvertisingParameters.class,
+                        AdvertiseData.class,
+                        int.class,
+                        int.class,
+                        AdvertisingSetCallback.class,
+                        new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                super.afterHookedMethod(param);
+                                handleAdvertiseStartedDataMethodParameter(param);
+                            }
                         }
-                    }
-            );
+                );
 
-            XposedHelpers.findAndHookMethod(
-                    BluetoothLeAdvertiser.class,
-                    "startAdvertisingSet",
-                    AdvertisingSetParameters.class,
-                    AdvertiseData.class,
-                    AdvertiseData.class,
-                    PeriodicAdvertisingParameters.class,
-                    AdvertiseData.class,
-                    int.class,
-                    int.class,
-                    AdvertisingSetCallback.class,
-                    Handler.class,
-                    new XC_MethodHook() {
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            super.afterHookedMethod(param);
-                            handleAdvertiseStartedDataMethodParameter(param);
+                XposedHelpers.findAndHookMethod(
+                        BluetoothLeAdvertiser.class,
+                        "startAdvertisingSet",
+                        AdvertisingSetParameters.class,
+                        AdvertiseData.class,
+                        AdvertiseData.class,
+                        PeriodicAdvertisingParameters.class,
+                        AdvertiseData.class,
+                        int.class,
+                        int.class,
+                        AdvertisingSetCallback.class,
+                        Handler.class,
+                        new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                super.afterHookedMethod(param);
+                                handleAdvertiseStartedDataMethodParameter(param);
+                            }
                         }
-                    }
-            );
+                );
 
-            XposedHelpers.findAndHookMethod(
-                    BluetoothLeAdvertiser.class,
-                    "stopAdvertisingSet",
-                    AdvertisingSetCallback.class,
-                    new XC_MethodHook() {
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            super.afterHookedMethod(param);
-                            handleAdvertiseStop();
-                        }
-                    }
-            );
+                if (verbosityLevelForLogs <= XLog.VERBOSE) {
+                    XposedHelpers.findAndHookMethod(
+                            BluetoothLeAdvertiser.class,
+                            "stopAdvertisingSet",
+                            AdvertisingSetCallback.class,
+                            new XC_MethodHook() {
+                                @Override
+                                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                    super.afterHookedMethod(param);
+                                    handleAdvertiseStop();
+                                }
+                            }
+                    );
+                }
+            }
         }
     }
 
@@ -175,8 +183,7 @@ public class BluetoothLeAdvertiserHooksHandler implements HooksHandler {
         }
     }
 
-    // logging of advertisement stop is for now disabled, because this information seems useless
     private void handleAdvertiseStop() {
-//        XLog.d("%s - Device stopped BLE advertising", lpparam.packageName);
+        XLog.v("%s - Device stopped BLE advertising", lpparam.packageName);
     }
 }
