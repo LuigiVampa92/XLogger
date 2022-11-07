@@ -31,7 +31,7 @@ public class HooksApplicator implements IXposedHookLoadPackage {
 
     private void obtainAppContext(final XC_LoadPackage.LoadPackageParam lpparam) {
         try {
-            XLog.d("Init app context hook for package %s - start", lpparam.packageName);
+            XLog.v("Init app context hook for package %s - start", lpparam.packageName);
             XposedHelpers.findAndHookMethod(
                     Application.class,
                     "onCreate",
@@ -66,21 +66,17 @@ public class HooksApplicator implements IXposedHookLoadPackage {
         if (!ConditionUtils.hasNfc(hookedAppContext)) {
             XLog.d("NFC hooks for package %s will NOT be applied - app does not use NFC", lpparam.packageName);
         } else {
-            XLog.d("Apply NFC hooks for package %s - start", lpparam.packageName);
             hooksHandlers.add(new HostCardEmulationHooksHandler(lpparam, hookedAppContext));
             hooksHandlers.add(new HostNfcFEmulationHooksHandler(lpparam, hookedAppContext));
             hooksHandlers.add(new RawDataNfcTagsHooksHandler(lpparam, hookedAppContext));
-            XLog.d("Apply NFC hooks for package %s - complete", lpparam.packageName);
         }
 
         if (!ConditionUtils.hasBluetooth(hookedAppContext)) {
             XLog.d("Bluetooth hooks for package %s will NOT be applied - app does not use bluetooth", lpparam.packageName);
         } else {
-            XLog.d("Apply Bluetooth hooks for package %s - start", lpparam.packageName);
-            hooksHandlers.add(new BluetoothHooksHandler(lpparam, hookedAppContext, XLog.INFO));
-            hooksHandlers.add(new BluetoothLeScannerHooksHandler(lpparam, hookedAppContext, XLog.INFO));
-            hooksHandlers.add(new BluetoothLeAdvertiserHooksHandler(lpparam, hookedAppContext, XLog.INFO));
-            XLog.d("Apply Bluetooth hooks for package %s - complete", lpparam.packageName);
+            hooksHandlers.add(new BluetoothHooksHandler(lpparam, hookedAppContext, XLog.DEBUG));
+            hooksHandlers.add(new BluetoothLeScannerHooksHandler(lpparam, hookedAppContext, XLog.DEBUG));
+            hooksHandlers.add(new BluetoothLeAdvertiserHooksHandler(lpparam, hookedAppContext, XLog.DEBUG));
         }
 
         for (HooksHandler handler : hooksHandlers) {

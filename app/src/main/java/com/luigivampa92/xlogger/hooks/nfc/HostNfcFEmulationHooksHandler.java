@@ -82,7 +82,7 @@ public class HostNfcFEmulationHooksHandler implements HooksHandler {
 
     private void applyHnfHooks(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<?>> hnfServices) {
         try {
-            XLog.d("Apply hnf hooks for package %s - start", lpparam.packageName);
+            XLog.v("Apply hnf hooks for package %s - start", lpparam.packageName);
             for (final Class<?> serviceClass : hnfServices) {
                 applyHnfStopHookForService(serviceClass);
                 applyHnfPacketHookForService(serviceClass);
@@ -95,7 +95,7 @@ public class HostNfcFEmulationHooksHandler implements HooksHandler {
 
     private void applyHnfPacketHookForService(Class<?> serviceClass) {
         String targetMethodName = "processNfcFPacket";
-        XLog.d("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
+        XLog.v("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
         if (HookUtils.hasNonAbstractMethodImplementation(serviceClass, targetMethodName)) {
             XposedHelpers.findAndHookMethod(
                     serviceClass,
@@ -155,7 +155,7 @@ public class HostNfcFEmulationHooksHandler implements HooksHandler {
         }
 
         String callbackMethodName = "sendResponsePacket";
-        XLog.d("Apply %s hook on parent class - start", callbackMethodName);
+        XLog.v("Apply %s hook on parent class - start", callbackMethodName);
         try {
             Class<?> abstractParentService = serviceClass.getSuperclass();
             XposedHelpers.findAndHookMethod(
@@ -198,7 +198,7 @@ public class HostNfcFEmulationHooksHandler implements HooksHandler {
 
     private void applyHnfStopHookForService(Class<?> serviceClass) {
         String targetMethodName = "onDeactivated";
-        XLog.d("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
+        XLog.v("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
         if (HookUtils.hasNonAbstractMethodImplementation(serviceClass, targetMethodName)) {
             XposedHelpers.findAndHookMethod(
                     serviceClass,

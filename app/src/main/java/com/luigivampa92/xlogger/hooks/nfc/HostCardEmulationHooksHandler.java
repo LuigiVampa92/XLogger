@@ -128,7 +128,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
 
     private void applyHceHooks(XC_LoadPackage.LoadPackageParam lpparam, Set<Class<?>> hceServices) {
         try {
-            XLog.d("Apply hce hooks for package %s - start", lpparam.packageName);
+            XLog.v("Apply hce hooks for package %s - start", lpparam.packageName);
             for (final Class<?> serviceClass : hceServices) {
                 applyHceStopHookForService(serviceClass);
                 applyHceApduHookForService(serviceClass);
@@ -157,7 +157,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
     // And both result handling point must check if the result haven't been recorded by another callback
     private void applyHceApduHookForService(Class<?> serviceClass) {
         String targetMethodName = "processCommandApdu";
-        XLog.d("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
+        XLog.v("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
         if (HookUtils.hasNonAbstractMethodImplementation(serviceClass, targetMethodName)) {
             XposedHelpers.findAndHookMethod(
                     serviceClass,
@@ -217,7 +217,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         }
 
         String callbackMethodName = "sendResponseApdu";
-        XLog.d("Apply %s hook on parent class - start", callbackMethodName);
+        XLog.v("Apply %s hook on parent class - start", callbackMethodName);
         try {
             Class<?> abstractParentService = serviceClass.getSuperclass();
             XposedHelpers.findAndHookMethod(
@@ -260,7 +260,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
 
     private void applyHceStopHookForService(Class<?> serviceClass) {
         String targetMethodName = "onDeactivated";
-        XLog.d("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
+        XLog.v("Apply %s hook on %s - start", targetMethodName, serviceClass.getCanonicalName());
         if (HookUtils.hasNonAbstractMethodImplementation(serviceClass, targetMethodName)) {
             XposedHelpers.findAndHookMethod(
                     serviceClass,

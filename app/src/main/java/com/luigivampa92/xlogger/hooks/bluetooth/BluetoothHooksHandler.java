@@ -41,7 +41,7 @@ public class BluetoothHooksHandler implements HooksHandler {
     }
 
     private void applyBleHooks(final XC_LoadPackage.LoadPackageParam lpparam) {
-        XLog.d("Init ble hooks for package %s - start", lpparam.packageName);
+        XLog.v("Init ble hooks for package %s - start", lpparam.packageName);
         try {
 //            applyPrimaryGattHooks();                  // not used
 //            applySecondaryGattHooks();                // not used
