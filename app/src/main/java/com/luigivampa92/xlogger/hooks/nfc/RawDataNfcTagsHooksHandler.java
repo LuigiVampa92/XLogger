@@ -68,7 +68,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             super.afterHookedMethod(param);
-                            XLog.i("Nfc interaction - tag technology %s - session record started", tagTechnologyClass.getSimpleName());
+                            XLog.d("Nfc interaction - tag technology %s - session record started", tagTechnologyClass.getSimpleName());
                             currentLogEntries = new ArrayList<>();
                         }
                     });
@@ -90,7 +90,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                                         currentLogEntries.add(logEntry);
                                     }
                                 } else {
-                                    XLog.i("NFC TX ERROR: empty command apdu");
+                                    XLog.d("NFC TX ERROR: empty command apdu");
                                 }
                             }
                             Object result = param.getResult();
@@ -103,7 +103,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                                         currentLogEntries.add(logEntry);
                                     }
                                 } else {
-                                    XLog.i("NFC RX ERROR: empty response apdu");
+                                    XLog.d("NFC RX ERROR: empty response apdu");
                                 }
                             }
                             completionHandler.removeCallbacksAndMessages(null);
@@ -128,7 +128,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                         super.afterHookedMethod(param);
-                        XLog.i("Nfc interaction - tag technology %s - session record stopped explicitly", tagTechnologyClass.getSimpleName());
+                        XLog.d("Nfc interaction - tag technology %s - session record stopped explicitly", tagTechnologyClass.getSimpleName());
                         transmitInteractionLog(tagTechnologyClass.getSimpleName());
                     }
                 });
@@ -150,7 +150,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
         return new Runnable() {
             @Override
             public void run() {
-                XLog.i("Nfc interaction - tag technology %s - session record stopped by timeout", tagTechnologyClassName);
+                XLog.d("Nfc interaction - tag technology %s - session record stopped by timeout", tagTechnologyClassName);
                 transmitInteractionLog(tagTechnologyClassName);
             }
         };

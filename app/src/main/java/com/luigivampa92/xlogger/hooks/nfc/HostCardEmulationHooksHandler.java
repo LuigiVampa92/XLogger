@@ -176,7 +176,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                 if (cApdu.length > 0) {
                                     if (currentLogEntries == null) {
                                         currentLogEntries = new ArrayList<>();
-                                        XLog.i("Emulation activated - session record started");
+                                        XLog.d("Emulation activated - session record started");
                                     }
                                     XLog.i("HCE RX: %s", DataUtils.toHexString(cApdu));
                                     InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), cApdu, BroadcastConstants.PEER_TERMINAL, BroadcastConstants.PEER_DEVICE);
@@ -184,7 +184,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                     completionHandler.removeCallbacksAndMessages(null);
                                     completionHandler.postDelayed(completeSessionRecordByTimeout(serviceClass.getCanonicalName()), completionTimerValueForNfc);
                                 } else {
-                                    XLog.i("HCE ERROR: received empty command apdu");
+                                    XLog.d("HCE ERROR: received empty command apdu");
                                 }
                             }
 
@@ -198,7 +198,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                 if (rApdu.length > 0) {
                                     if (currentLogEntries == null) {
                                         currentLogEntries = new ArrayList<>();
-                                        XLog.i("Emulation activated - session record started");
+                                        XLog.d("Emulation activated - session record started");
                                     }
                                     if (!currentLogEntries.isEmpty()) {
                                         InteractionLogEntry lastEntry = currentLogEntries.get(currentLogEntries.size() - 1);
@@ -213,7 +213,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                     completionHandler.removeCallbacksAndMessages(null);
                                     completionHandler.postDelayed(completeSessionRecordByTimeout(serviceClass.getCanonicalName()), completionTimerValueForNfc);
                                 } else {
-                                    XLog.i("HCE ERROR: transmitted empty response apdu");
+                                    XLog.d("HCE ERROR: transmitted empty response apdu");
                                 }
                             }
                         }
@@ -240,7 +240,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                 if (rApdu.length > 0) {
                                     if (currentLogEntries == null) {
                                         currentLogEntries = new ArrayList<>();
-                                        XLog.i("Emulation activated - session record started");
+                                        XLog.d("Emulation activated - session record started");
                                     }
                                     if (!currentLogEntries.isEmpty()) {
                                         InteractionLogEntry lastEntry = currentLogEntries.get(currentLogEntries.size() - 1);
@@ -255,7 +255,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                     completionHandler.removeCallbacksAndMessages(null);
                                     completionHandler.postDelayed(completeSessionRecordByTimeout(serviceClass.getCanonicalName()), completionTimerValueForNfc);
                                 } else {
-                                    XLog.i("HCE ERROR: transmitted empty response apdu");
+                                    XLog.d("HCE ERROR: transmitted empty response apdu");
                                 }
                             }
                         }
@@ -279,7 +279,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             super.afterHookedMethod(param);
-                            XLog.i("Emulation deactivated explicitly - %s - session record stopped", serviceClass.getCanonicalName());
+                            XLog.d("Emulation deactivated explicitly - %s - session record stopped", serviceClass.getCanonicalName());
                             transmitInteractionLog(serviceClass.getCanonicalName());
                         }
                     });
@@ -311,7 +311,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         return new Runnable() {
             @Override
             public void run() {
-                XLog.i("Emulation deactivated by timeout - %s - session record stopped", serviceClassName);
+                XLog.d("Emulation deactivated by timeout - %s - session record stopped", serviceClassName);
                 transmitInteractionLog(serviceClassName);
             }
         };
