@@ -11,6 +11,7 @@ import android.nfc.tech.NfcB;
 import android.nfc.tech.NfcF;
 import android.nfc.tech.NfcV;
 import android.nfc.tech.TagTechnology;
+import android.os.Handler;
 
 import com.luigivampa92.xlogger.BroadcastConstants;
 import com.luigivampa92.xlogger.DataUtils;
@@ -32,6 +33,8 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppContext;
     private List<InteractionLogEntry> currentLogEntries;
+    private final Handler completionHandler = new Handler();
+    private final int completionTimerValueForNfc = 1500;
 
     public RawDataNfcTagsHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppContext) {
         this.lpparam = lpparam;
@@ -56,7 +59,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
     }
 
     private void applyNfcHooksForTagTech(XC_LoadPackage.LoadPackageParam lpparam, Class<? extends TagTechnology> tagTechnologyClass) {
-        XLog.d("Init nfc hooks for package %s - tag technology %s - start", lpparam.packageName, tagTechnologyClass.getSimpleName());
+        XLog.v("Init nfc hooks for package %s - tag technology %s - start", lpparam.packageName, tagTechnologyClass.getSimpleName());
         try {
             XposedHelpers.findAndHookMethod(
                     tagTechnologyClass,
@@ -69,27 +72,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                             currentLogEntries = new ArrayList<>();
                         }
                     });
-            XposedHelpers.findAndHookMethod(
-                    tagTechnologyClass,
-                    "close",
-                    new XC_MethodHook() {
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            super.afterHookedMethod(param);
-                            XLog.i("Nfc interaction - tag technology %s - session record stopped", tagTechnologyClass.getSimpleName());
-
-                            InteractionLog interactionLog = new InteractionLog(InteractionType.NFC_TAG_RAW, lpparam.packageName, tagTechnologyClass.getSimpleName(), (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
-
-                            Intent sendInteractionLogRecordIntent = new Intent();
-                            sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
-                            sendInteractionLogRecordIntent.setComponent(new ComponentName(BroadcastConstants.XLOGGER_PACKAGE, BroadcastConstants.INTERACTION_LOG_RECEIVER));
-                            sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG_NFC_RAW_TAG);
-                            sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
-
-                            hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
-                            currentLogEntries = null;
-                        }
-                    });
+//            hookExplicitDeactivation(tagTechnologyClass);    // disabled for now, seems very unreliable compared to timeouts
             XposedHelpers.findAndHookMethod(
                     tagTechnologyClass,
                     "transceive",
@@ -123,6 +106,8 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                                     XLog.i("NFC RX ERROR: empty response apdu");
                                 }
                             }
+                            completionHandler.removeCallbacksAndMessages(null);
+                            completionHandler.postDelayed(completeSessionRecordByTimeout(tagTechnologyClass.getSimpleName()), completionTimerValueForNfc);
                         }
                     });
             XLog.d("Init nfc hooks for package %s - tag technology %s - complete", lpparam.packageName, tagTechnologyClass.getSimpleName());
@@ -133,5 +118,41 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
 
     private boolean featuresSupported() {
         return hookedAppContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC);
+    }
+
+    private void hookExplicitDeactivation(Class<? extends TagTechnology> tagTechnologyClass) {
+        XposedHelpers.findAndHookMethod(
+                tagTechnologyClass,
+                "close",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        XLog.i("Nfc interaction - tag technology %s - session record stopped explicitly", tagTechnologyClass.getSimpleName());
+                        transmitInteractionLog(tagTechnologyClass.getSimpleName());
+                    }
+                });
+    }
+
+    private void transmitInteractionLog(final String tagTechnologyClassName) {
+        completionHandler.removeCallbacksAndMessages(null);
+        InteractionLog interactionLog = new InteractionLog(InteractionType.NFC_TAG_RAW, lpparam.packageName, tagTechnologyClassName, (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
+        Intent sendInteractionLogRecordIntent = new Intent();
+        sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
+        sendInteractionLogRecordIntent.setComponent(new ComponentName(BroadcastConstants.XLOGGER_PACKAGE, BroadcastConstants.INTERACTION_LOG_RECEIVER));
+        sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG_NFC_RAW_TAG);
+        sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
+        hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
+        currentLogEntries = null;
+    }
+
+    private Runnable completeSessionRecordByTimeout(final String tagTechnologyClassName) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                XLog.i("Nfc interaction - tag technology %s - session record stopped by timeout", tagTechnologyClassName);
+                transmitInteractionLog(tagTechnologyClassName);
+            }
+        };
     }
 }

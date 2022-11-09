@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.nfc.cardemulation.HostApduService;
 import android.os.Bundle;
+import android.os.Handler;
 
 import com.luigivampa92.xlogger.BroadcastConstants;
 import com.luigivampa92.xlogger.DataUtils;
@@ -35,6 +36,8 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
     private final Context hookedAppContext;
     private Set<Class<?>> hceServices;
     private List<InteractionLogEntry> currentLogEntries;
+    private static final Handler completionHandler = new Handler();
+    private static final int completionTimerValueForNfc = 1500;
 
     public HostCardEmulationHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppContext) {
         this.lpparam = lpparam;
@@ -130,7 +133,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         try {
             XLog.v("Apply hce hooks for package %s - start", lpparam.packageName);
             for (final Class<?> serviceClass : hceServices) {
-                applyHceStopHookForService(serviceClass);
+//                applyHceStopHookForService(serviceClass);  // disabled for now, seems very unreliable compared to timeouts
                 applyHceApduHookForService(serviceClass);
             }
             XLog.d("Apply hce hooks for package %s - complete", lpparam.packageName);
@@ -178,6 +181,8 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                     XLog.i("HCE RX: %s", DataUtils.toHexString(cApdu));
                                     InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), cApdu, BroadcastConstants.PEER_TERMINAL, BroadcastConstants.PEER_DEVICE);
                                     currentLogEntries.add(logEntry);
+                                    completionHandler.removeCallbacksAndMessages(null);
+                                    completionHandler.postDelayed(completeSessionRecordByTimeout(serviceClass.getCanonicalName()), completionTimerValueForNfc);
                                 } else {
                                     XLog.i("HCE ERROR: received empty command apdu");
                                 }
@@ -205,6 +210,8 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                     XLog.i("HCE TX: %s", DataUtils.toHexString(rApdu));
                                     InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_TERMINAL);
                                     currentLogEntries.add(logEntry);
+                                    completionHandler.removeCallbacksAndMessages(null);
+                                    completionHandler.postDelayed(completeSessionRecordByTimeout(serviceClass.getCanonicalName()), completionTimerValueForNfc);
                                 } else {
                                     XLog.i("HCE ERROR: transmitted empty response apdu");
                                 }
@@ -245,6 +252,8 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                     XLog.i("HCE TX: %s", DataUtils.toHexString(rApdu));
                                     InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_TERMINAL);
                                     currentLogEntries.add(logEntry);
+                                    completionHandler.removeCallbacksAndMessages(null);
+                                    completionHandler.postDelayed(completeSessionRecordByTimeout(serviceClass.getCanonicalName()), completionTimerValueForNfc);
                                 } else {
                                     XLog.i("HCE ERROR: transmitted empty response apdu");
                                 }
@@ -270,15 +279,8 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                             super.afterHookedMethod(param);
-                            XLog.i("Emulation deactivated - %s - session record stopped", serviceClass.getCanonicalName());
-                            InteractionLog interactionLog = new InteractionLog(InteractionType.HCE_NORMAL, lpparam.packageName, serviceClass.getCanonicalName(), (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
-                            Intent sendInteractionLogRecordIntent = new Intent();
-                            sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
-                            sendInteractionLogRecordIntent.setComponent(new ComponentName(BroadcastConstants.XLOGGER_PACKAGE, BroadcastConstants.INTERACTION_LOG_RECEIVER));
-                            sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG_NFC_RAW_TAG);
-                            sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
-                            hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
-                            currentLogEntries = null;
+                            XLog.i("Emulation deactivated explicitly - %s - session record stopped", serviceClass.getCanonicalName());
+                            transmitInteractionLog(serviceClass.getCanonicalName());
                         }
                     });
             XLog.d("Apply %s hook on %s - complete", targetMethodName, serviceClass.getCanonicalName());
@@ -291,5 +293,27 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         boolean hasNfcFeature = hookedAppContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC);
         boolean hasNfcHceFeature = hookedAppContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION);
         return hasNfcFeature && hasNfcHceFeature;
+    }
+
+    private void transmitInteractionLog(final String serviceClassName) {
+        completionHandler.removeCallbacksAndMessages(null);
+        InteractionLog interactionLog = new InteractionLog(InteractionType.HCE_NORMAL, lpparam.packageName, serviceClassName, (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
+        Intent sendInteractionLogRecordIntent = new Intent();
+        sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
+        sendInteractionLogRecordIntent.setComponent(new ComponentName(BroadcastConstants.XLOGGER_PACKAGE, BroadcastConstants.INTERACTION_LOG_RECEIVER));
+        sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG_NFC_RAW_TAG);
+        sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
+        hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
+        currentLogEntries = null;
+    }
+
+    private Runnable completeSessionRecordByTimeout(final String serviceClassName) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                XLog.i("Emulation deactivated by timeout - %s - session record stopped", serviceClassName);
+                transmitInteractionLog(serviceClassName);
+            }
+        };
     }
 }
