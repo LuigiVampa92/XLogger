@@ -17,6 +17,7 @@ import com.luigivampa92.xlogger.BroadcastConstants;
 import com.luigivampa92.xlogger.DataUtils;
 import com.luigivampa92.xlogger.domain.InteractionLog;
 import com.luigivampa92.xlogger.domain.InteractionLogEntry;
+import com.luigivampa92.xlogger.domain.InteractionLogEntryAction;
 import com.luigivampa92.xlogger.domain.InteractionType;
 import com.luigivampa92.xlogger.hooks.HooksHandler;
 import com.luigivampa92.xlogger.hooks.XLog;
@@ -86,7 +87,16 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                                 if (cApdu.length > 0) {
                                     XLog.i("NFC TX: %s", DataUtils.toHexString(cApdu));
                                     if (currentLogEntries != null) {
-                                        InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), cApdu, BroadcastConstants.PEER_DEVICE, BroadcastConstants.PEER_CARD);
+                                        InteractionLogEntry logEntry = new InteractionLogEntry(
+                                                System.currentTimeMillis(),
+                                                InteractionLogEntryAction.TRANSFER_DATA_NFC,
+                                                cApdu,
+                                                null,
+                                                BroadcastConstants.PEER_DEVICE,
+                                                BroadcastConstants.PEER_CARD,
+                                                null,
+                                                null
+                                        );
                                         currentLogEntries.add(logEntry);
                                     }
                                 } else {
@@ -99,7 +109,16 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                                 if (rApdu.length > 0) {
                                     XLog.i("NFC RX: %s", DataUtils.toHexString(rApdu));
                                     if (currentLogEntries != null) {
-                                        InteractionLogEntry logEntry = new InteractionLogEntry(System.currentTimeMillis(), rApdu, BroadcastConstants.PEER_CARD, BroadcastConstants.PEER_DEVICE);
+                                        InteractionLogEntry logEntry = new InteractionLogEntry(
+                                                System.currentTimeMillis(),
+                                                InteractionLogEntryAction.TRANSFER_DATA_NFC,
+                                                rApdu,
+                                                null,
+                                                BroadcastConstants.PEER_CARD,
+                                                BroadcastConstants.PEER_DEVICE,
+                                                null,
+                                                null
+                                        );
                                         currentLogEntries.add(logEntry);
                                     }
                                 } else {
@@ -140,7 +159,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
         Intent sendInteractionLogRecordIntent = new Intent();
         sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
         sendInteractionLogRecordIntent.setComponent(new ComponentName(BroadcastConstants.XLOGGER_PACKAGE, BroadcastConstants.INTERACTION_LOG_RECEIVER));
-        sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG_NFC_RAW_TAG);
+        sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG);
         sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
         hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
         currentLogEntries = null;

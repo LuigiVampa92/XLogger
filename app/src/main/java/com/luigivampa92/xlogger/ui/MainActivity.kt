@@ -85,7 +85,7 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
     }
 
     private fun entryToShortText(log: InteractionLog): String {
-        return "${log.timestamp.toString()} - ${log.packageName} - ${log.serviceName} - ${log.type.name}\n"
+        return "${log.timestamp.toString()} - ${log.packageName} - ${log.metadata} - ${log.type.name}\n"
     }
 
     private fun entryToText(log: InteractionLog): String {
@@ -94,7 +94,7 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
         sb.append("INTERACTION LOG RECEIVED\n")
         sb.append(String.format("APP - %s\n", log.getPackageName()))
         sb.append(String.format("TYPE - %s\n", log.getType().name))
-        sb.append(String.format("SERVICE - %s\n", log.getServiceName()))
+        sb.append(String.format("SERVICE - %s\n", log.getMetadata()))
         sb.append(
             String.format(
                 "TIME - %s\n",

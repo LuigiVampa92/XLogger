@@ -9,16 +9,16 @@ public final class InteractionLog implements Parcelable {
 
     private final InteractionType type;
     private final String packageName;
-    private final String serviceName;
+    private final String metadata;
     private final List<InteractionLogEntry> entries;
     private final long timestamp;
     private final long duration;
 
-    public InteractionLog(InteractionType type, String packageName, String serviceName, List<InteractionLogEntry> entries) {
+    public InteractionLog(InteractionType type, String packageName, String metadata, List<InteractionLogEntry> entries) {
         this.type = type;
         this.entries = entries;
         this.packageName = packageName;
-        this.serviceName = serviceName;
+        this.metadata = metadata;
         if (entries != null && !entries.isEmpty()) {
             InteractionLogEntry firstEntry = entries.get(0);
             InteractionLogEntry lastEntry = entries.get(entries.size() - 1);
@@ -38,8 +38,8 @@ public final class InteractionLog implements Parcelable {
         return packageName;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public String getMetadata() {
+        return metadata;
     }
 
     public List<InteractionLogEntry> getEntries() {
@@ -57,7 +57,7 @@ public final class InteractionLog implements Parcelable {
     protected InteractionLog(Parcel in) {
         type = InteractionType.fromValue(in.readInt());
         packageName = in.readString();
-        serviceName = in.readString();
+        metadata = in.readString();
         entries = in.createTypedArrayList(InteractionLogEntry.CREATOR);
         timestamp = in.readLong();
         duration = in.readLong();
@@ -67,7 +67,7 @@ public final class InteractionLog implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(type.getValue());
         dest.writeString(packageName);
-        dest.writeString(serviceName);
+        dest.writeString(metadata);
         dest.writeTypedList(entries);
         dest.writeLong(timestamp);
         dest.writeLong(duration);

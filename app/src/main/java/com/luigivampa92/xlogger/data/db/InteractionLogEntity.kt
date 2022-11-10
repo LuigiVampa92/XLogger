@@ -16,13 +16,13 @@ data class InteractionLogEntity (
     val interactionType: InteractionType,
     @ColumnInfo(name = "package_name")
     val packageName: String,
-    @ColumnInfo(name = "service_name")
-    val serviceName: String,
+    @ColumnInfo(name = "metadata")
+    val metadata: String?,
     @ColumnInfo(name = "log_entries")
     val logEntries: List<InteractionLogEntry>
 ) {
 
-    fun toInteractionLog() = InteractionLog(interactionType, packageName, serviceName, logEntries)
+    fun toInteractionLog() = InteractionLog(interactionType, packageName, metadata, logEntries)
 
     companion object {
 
@@ -32,7 +32,7 @@ data class InteractionLogEntity (
                 log.entries.firstOrNull()?.timestamp ?: throw RuntimeException("No log entries"),
                 log.type,
                 log.packageName,
-                log.serviceName,
+                log.metadata,
                 log.entries
             )
         }

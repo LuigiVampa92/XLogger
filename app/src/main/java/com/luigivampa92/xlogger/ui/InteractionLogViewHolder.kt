@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
+import android.nfc.tech.IsoDep
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -78,7 +79,7 @@ class InteractionLogViewHolder (
 
     private fun getTitleText(log: InteractionLog): String {
         return when (log.type) {
-            InteractionType.NFC_TAG_RAW -> "Read ${log.serviceName} NFC card"
+            InteractionType.NFC_TAG_RAW -> if (IsoDep::class.java.simpleName == log.metadata) "Read NFC card" else "Read ${log.metadata} NFC card"
             else -> "Emulate NFC card"
         }
     }
@@ -95,7 +96,7 @@ class InteractionLogViewHolder (
 
             if (
                 "com.google.android.gms" == log.packageName
-                && "com.google.android.gms.tapandpay.hce.service.TpHceChimeraService" == log.serviceName
+                && "com.google.android.gms.tapandpay.hce.service.TpHceChimeraService" == log.metadata
             ) {
                 try {
                     val gpayInfo = packageManager.getApplicationInfo("com.google.android.apps.walletnfcrel", 0)

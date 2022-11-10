@@ -2,9 +2,13 @@ package com.luigivampa92.xlogger.domain;
 
 public enum InteractionType {
 
-    NFC_TAG_RAW(1),
-    HCE_NORMAL(2),
-    HCE_NFC_F(3);
+    GENERAL_LOG(1),
+
+    NFC_TAG_RAW(11),
+    HCE_NORMAL(12),
+    HCE_NFC_F(13),
+
+    BLE_GATT_INTERACTION(21);
 
     private final int value;
 

@@ -20,7 +20,7 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         switch (intent.getAction()) {
-            case BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG_NFC_RAW_TAG:
+            case BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG:
                 handleLogRawNfcTag(context, intent);
                 break;
         }
@@ -34,7 +34,7 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
 
         AppDatabase db = AppDatabase.getInstance(context.getApplicationContext());
         InteractionLogEntity entity = InteractionLogEntity.fromInteractionLog(interactionLog);
-        XLog.i("save entity - start"); // todo some other texts ?
+        XLog.v("save entity - start");
         Disposable d = db.interactionLogDao().insert(entity)  // todo wtf ?
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -42,13 +42,13 @@ public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
                 new Action() {
                     @Override
                     public void run() throws Exception {
-                        XLog.i("save entity - success");
+                        XLog.d("save entity - success");
                     }
                 },
                 new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
-                        XLog.i("save entity - error");
+                        XLog.d("save entity - error");
                     }
                 }
         );
