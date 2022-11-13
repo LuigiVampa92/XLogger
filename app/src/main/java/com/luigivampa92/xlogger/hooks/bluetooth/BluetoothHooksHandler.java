@@ -7,14 +7,25 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 
+import com.luigivampa92.xlogger.BroadcastConstants;
 import com.luigivampa92.xlogger.DataUtils;
+import com.luigivampa92.xlogger.domain.InteractionLog;
+import com.luigivampa92.xlogger.domain.InteractionLogEntry;
+import com.luigivampa92.xlogger.domain.InteractionLogEntryAction;
+import com.luigivampa92.xlogger.domain.InteractionType;
 import com.luigivampa92.xlogger.hooks.HooksHandler;
 import com.luigivampa92.xlogger.hooks.XLog;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
@@ -25,11 +36,18 @@ public class BluetoothHooksHandler implements HooksHandler {
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppContext;
     private int verbosityLevelForLogs = XLog.SILENT;
+    private List<InteractionLogEntry> currentLogEntries = new ArrayList<>();
+    private final int completionTimerValueForBle = 10000;
+    private ScheduledExecutorService timerService;
 
     public BluetoothHooksHandler(final XC_LoadPackage.LoadPackageParam lpparam, final Context hookedAppContext, int verbosityLevelForLogs) {
         this.lpparam = lpparam;
         this.hookedAppContext = hookedAppContext;
         this.verbosityLevelForLogs = verbosityLevelForLogs;
+        if (timerService == null || timerService.isShutdown() || timerService.isTerminated()) {
+            timerService = Executors.newSingleThreadScheduledExecutor();
+            timerService.scheduleAtFixedRate(timeoutCheck(), completionTimerValueForBle, completionTimerValueForBle, TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
@@ -104,8 +122,34 @@ public class BluetoothHooksHandler implements HooksHandler {
                             int newState = (int) param.args[2];
                             if (previousState != BluetoothGatt.STATE_CONNECTED && newState == BluetoothGatt.STATE_CONNECTED) {
                                 XLog.i("BLE - [ THIS DEVICE ] connected to [ %s ] ", gatt.getDevice().getAddress());
+                                if (currentLogEntries != null) {
+                                    InteractionLogEntry logEntry = new InteractionLogEntry(
+                                            System.currentTimeMillis(),
+                                            InteractionLogEntryAction.BLE_CONNECT,
+                                            null,
+                                            null,
+                                            BroadcastConstants.PEER_THIS_DEVICE,
+                                            gatt.getDevice().getAddress(),
+                                            null,
+                                            null
+                                    );
+                                    currentLogEntries.add(logEntry);
+                                }
                             } else if (previousState == BluetoothGatt.STATE_CONNECTED && newState != BluetoothGatt.STATE_CONNECTED) {
                                 XLog.i("BLE - [ THIS DEVICE ] disconnected from [ %s ] ", gatt.getDevice().getAddress());
+                                if (currentLogEntries != null) {
+                                    InteractionLogEntry logEntry = new InteractionLogEntry(
+                                            System.currentTimeMillis(),
+                                            InteractionLogEntryAction.BLE_DISCONNECT,
+                                            null,
+                                            null,
+                                            BroadcastConstants.PEER_THIS_DEVICE,
+                                            gatt.getDevice().getAddress(),
+                                            null,
+                                            null
+                                    );
+                                    currentLogEntries.add(logEntry);
+                                }
                             }
                         }
                     });
@@ -130,7 +174,22 @@ public class BluetoothHooksHandler implements HooksHandler {
                                 BluetoothGatt gatt = (BluetoothGatt) param.args[0];
                                 BluetoothGattCharacteristic c = (BluetoothGattCharacteristic) param.args[1];
                                 byte[] data = c.getValue();
-                                XLog.i("BLE - FROM [ THIS DEVICE ] - TO [ %s ] - [ SERV %s / CHAR %s ] - [ READ ] - %s ", gatt.getDevice().getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                if (data != null && data.length > 0) {
+                                    XLog.i("BLE - FROM [ THIS DEVICE ] - TO [ %s ] - [ SERV %s / CHAR %s ] - [ READ ] - %s ", gatt.getDevice().getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                    if (currentLogEntries != null) {
+                                        InteractionLogEntry logEntry = new InteractionLogEntry(
+                                                System.currentTimeMillis(),
+                                                InteractionLogEntryAction.BLE_READ,
+                                                data,
+                                                null,
+                                                BroadcastConstants.PEER_THIS_DEVICE,
+                                                gatt.getDevice().getAddress(),
+                                                c.getService().getUuid().toString(),
+                                                c.getUuid().toString()
+                                        );
+                                        currentLogEntries.add(logEntry);
+                                    }
+                                }
                             }
                         }
                     });
@@ -155,7 +214,22 @@ public class BluetoothHooksHandler implements HooksHandler {
                                 BluetoothGatt gatt = (BluetoothGatt) param.args[0];
                                 BluetoothGattCharacteristic c = (BluetoothGattCharacteristic) param.args[1];
                                 byte[] data = c.getValue();
-                                XLog.i("BLE - FROM [ THIS DEVICE ] - TO [ %s ] - [ SERV %s / CHAR %s ] - [ WRITE ] - %s ", gatt.getDevice().getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                if (data != null && data.length > 0) {
+                                    XLog.i("BLE - FROM [ THIS DEVICE ] - TO [ %s ] - [ SERV %s / CHAR %s ] - [ WRITE ] - %s ", gatt.getDevice().getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                    if (currentLogEntries != null) {
+                                        InteractionLogEntry logEntry = new InteractionLogEntry(
+                                                System.currentTimeMillis(),
+                                                InteractionLogEntryAction.BLE_WRITE,
+                                                data,
+                                                null,
+                                                BroadcastConstants.PEER_THIS_DEVICE,
+                                                gatt.getDevice().getAddress(),
+                                                c.getService().getUuid().toString(),
+                                                c.getUuid().toString()
+                                        );
+                                        currentLogEntries.add(logEntry);
+                                    }
+                                }
                             }
                         }
                     });
@@ -179,7 +253,22 @@ public class BluetoothHooksHandler implements HooksHandler {
                                 BluetoothGatt gatt = (BluetoothGatt) param.args[0];
                                 BluetoothGattCharacteristic c = (BluetoothGattCharacteristic) param.args[1];
                                 byte[] data = c.getValue();
-                                XLog.i("BLE - FROM [ %s ] - TO [ THIS DEVICE ] - [ SERV %s / CHAR %s ] - [ NOTIFY ] - %s ", gatt.getDevice().getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                if (data != null && data.length > 0) {
+                                    XLog.i("BLE - FROM [ %s ] - TO [ THIS DEVICE ] - [ SERV %s / CHAR %s ] - [ NOTIFY ] - %s ", gatt.getDevice().getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                    if (currentLogEntries != null) {
+                                        InteractionLogEntry logEntry = new InteractionLogEntry(
+                                                System.currentTimeMillis(),
+                                                InteractionLogEntryAction.BLE_NOTIFY,
+                                                data,
+                                                null,
+                                                gatt.getDevice().getAddress(),
+                                                BroadcastConstants.PEER_THIS_DEVICE,
+                                                c.getService().getUuid().toString(),
+                                                c.getUuid().toString()
+                                        );
+                                        currentLogEntries.add(logEntry);
+                                    }
+                                }
                             }
                         }
                     });
@@ -255,7 +344,22 @@ public class BluetoothHooksHandler implements HooksHandler {
                                 BluetoothDevice d = (BluetoothDevice) param.args[0];
                                 BluetoothGattCharacteristic c = (BluetoothGattCharacteristic) param.args[1];
                                 byte[] data = c.getValue();
-                                XLog.i("BLE - FROM [ THIS DEVICE ] - TO [ %s ] - [ SERV %s / CHAR %s ] - [ NOTIFY ] - %s ", d.getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                if (data != null && data.length > 0) {
+                                    XLog.i("BLE - FROM [ THIS DEVICE ] - TO [ %s ] - [ SERV %s / CHAR %s ] - [ NOTIFY ] - %s ", d.getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                    if (currentLogEntries != null) {
+                                        InteractionLogEntry logEntry = new InteractionLogEntry(
+                                                System.currentTimeMillis(),
+                                                InteractionLogEntryAction.BLE_NOTIFY,
+                                                data,
+                                                null,
+                                                BroadcastConstants.PEER_THIS_DEVICE,
+                                                d.getAddress(),
+                                                c.getService().getUuid().toString(),
+                                                c.getUuid().toString()
+                                        );
+                                        currentLogEntries.add(logEntry);
+                                    }
+                                }
                             }
                         }
                     });
@@ -303,8 +407,34 @@ public class BluetoothHooksHandler implements HooksHandler {
                             int newState = (int) param.args[2];
                             if (previousState != BluetoothGatt.STATE_CONNECTED && newState == BluetoothGatt.STATE_CONNECTED) {
                                 XLog.i("BLE - [ %s ] connected to [ THIS DEVICE ] ", device.getAddress());
+                                if (currentLogEntries != null) {
+                                    InteractionLogEntry logEntry = new InteractionLogEntry(
+                                            System.currentTimeMillis(),
+                                            InteractionLogEntryAction.BLE_CONNECT,
+                                            null,
+                                            null,
+                                            device.getAddress(),
+                                            BroadcastConstants.PEER_THIS_DEVICE,
+                                            null,
+                                            null
+                                    );
+                                    currentLogEntries.add(logEntry);
+                                }
                             } else if (previousState == BluetoothGatt.STATE_CONNECTED && newState != BluetoothGatt.STATE_CONNECTED) {
                                 XLog.i("BLE - [ %s ] disconnected from [ THIS DEVICE ] ", device.getAddress());
+                                if (currentLogEntries != null) {
+                                    InteractionLogEntry logEntry = new InteractionLogEntry(
+                                            System.currentTimeMillis(),
+                                            InteractionLogEntryAction.BLE_DISCONNECT,
+                                            null,
+                                            null,
+                                            device.getAddress(),
+                                            BroadcastConstants.PEER_THIS_DEVICE,
+                                            null,
+                                            null
+                                    );
+                                    currentLogEntries.add(logEntry);
+                                }
                             }
                         }
                     });
@@ -330,7 +460,22 @@ public class BluetoothHooksHandler implements HooksHandler {
                                 BluetoothDevice d = (BluetoothDevice) param.args[0];
                                 BluetoothGattCharacteristic c = (BluetoothGattCharacteristic) param.args[3];
                                 byte[] data = c.getValue();
-                                XLog.i("BLE - FROM [ %s ] - TO [ THIS DEVICE ] - [ SERV %s / CHAR %s ] - [ READ ] - %s ", d.getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                if (data != null && data.length > 0) {
+                                    XLog.i("BLE - FROM [ %s ] - TO [ THIS DEVICE ] - [ SERV %s / CHAR %s ] - [ READ ] - %s ", d.getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                    if (currentLogEntries != null) {
+                                        InteractionLogEntry logEntry = new InteractionLogEntry(
+                                                System.currentTimeMillis(),
+                                                InteractionLogEntryAction.BLE_READ,
+                                                data,
+                                                null,
+                                                d.getAddress(),
+                                                BroadcastConstants.PEER_THIS_DEVICE,
+                                                c.getService().getUuid().toString(),
+                                                c.getUuid().toString()
+                                        );
+                                        currentLogEntries.add(logEntry);
+                                    }
+                                }
                             }
                         }
                     });
@@ -360,7 +505,22 @@ public class BluetoothHooksHandler implements HooksHandler {
                                 BluetoothDevice d = (BluetoothDevice) param.args[0];
                                 BluetoothGattCharacteristic c = (BluetoothGattCharacteristic) param.args[2];
                                 byte[] data = (byte[]) param.args[6];
-                                XLog.i("BLE - FROM [ %s ] - TO [ THIS DEVICE ] - [ SERV %s / CHAR %s ] - [ WRITE ] - %s ", d.getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                if (data != null && data.length > 0) {
+                                    XLog.i("BLE - FROM [ %s ] - TO [ THIS DEVICE ] - [ SERV %s / CHAR %s ] - [ WRITE ] - %s ", d.getAddress(), c.getService().getUuid().toString(), c.getUuid().toString(), DataUtils.toHexString(data));
+                                    if (currentLogEntries != null) {
+                                        InteractionLogEntry logEntry = new InteractionLogEntry(
+                                                System.currentTimeMillis(),
+                                                InteractionLogEntryAction.BLE_WRITE,
+                                                data,
+                                                null,
+                                                d.getAddress(),
+                                                BroadcastConstants.PEER_THIS_DEVICE,
+                                                c.getService().getUuid().toString(),
+                                                c.getUuid().toString()
+                                        );
+                                        currentLogEntries.add(logEntry);
+                                    }
+                                }
                             }
                         }
                     });
@@ -402,5 +562,34 @@ public class BluetoothHooksHandler implements HooksHandler {
 //            void onMtuChanged(BluetoothDevice device, int mtu)
 //            void onPhyUpdate(BluetoothDevice device, int txPhy, int rxPhy, int status)
 //            void onPhyRead(BluetoothDevice device, int txPhy, int rxPhy, int status)
+    }
+
+    private synchronized void transmitInteractionLog() {
+        InteractionLog interactionLog = new InteractionLog(InteractionType.BLE_GATT_INTERACTION, lpparam.packageName, null, (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
+        Intent sendInteractionLogRecordIntent = new Intent();
+        sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
+        sendInteractionLogRecordIntent.setComponent(new ComponentName(BroadcastConstants.XLOGGER_PACKAGE, BroadcastConstants.INTERACTION_LOG_RECEIVER));
+        sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG);
+        sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
+        hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
+        if (currentLogEntries != null) {
+            currentLogEntries.clear();
+        }
+    }
+
+    private Runnable timeoutCheck() {
+        return new Runnable() {
+            @Override
+            public void run() {
+                if (currentLogEntries != null && !currentLogEntries.isEmpty()) {
+                    InteractionLogEntry lastEntry = currentLogEntries.get(currentLogEntries.size() - 1);
+                    boolean timeout = (System.currentTimeMillis() - lastEntry.getTimestamp()) >= completionTimerValueForBle;
+                    if (timeout) {
+                        XLog.d("Ble interaction - session record stopped by timeout");
+                        transmitInteractionLog();
+                    }
+                }
+            }
+        };
     }
 }
