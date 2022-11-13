@@ -81,7 +81,7 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
     }
 
     private fun showLogDetails(log: InteractionLog) {
-
+        startActivity(InteractionLogActivity.newIntent(this, log))
     }
 
     private fun entryToShortText(log: InteractionLog): String {

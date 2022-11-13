@@ -52,13 +52,24 @@ class InteractionLogViewHolder (
 
         setAppData(context, log)
 
-        val interactionTypeBackgroundColor = ContextCompat.getColor(context, R.color.color_red)
-        imageIfaceBackground.setImageTintList(ColorStateList.valueOf(interactionTypeBackgroundColor))
-        imageIfaceBackground.visibility = View.VISIBLE
-
-        val interactionTypeIconDrawable = ContextCompat.getDrawable(context, R.drawable.ic_interaction_type_nfc)
-        imageIfaceIcon.setImageDrawable(interactionTypeIconDrawable)
-        imageIfaceIcon.visibility = View.VISIBLE
+        if (InteractionType.BLE_GATT_INTERACTION == log.type) {
+            val interactionTypeBackgroundColor = ContextCompat.getColor(context, R.color.color_red)
+            imageIfaceBackground.setImageTintList(ColorStateList.valueOf(interactionTypeBackgroundColor))
+            imageIfaceBackground.visibility = View.VISIBLE
+            val interactionTypeIconDrawable = ContextCompat.getDrawable(context, R.drawable.ic_interaction_type_bluetooth)
+            imageIfaceIcon.setImageDrawable(interactionTypeIconDrawable)
+            imageIfaceIcon.visibility = View.VISIBLE
+        } else if (InteractionType.NFC_TAG_RAW == log.type || InteractionType.HCE_NORMAL == log.type || InteractionType.HCE_NFC_F == log.type) {
+            val interactionTypeBackgroundColor = ContextCompat.getColor(context, R.color.color_red)
+            imageIfaceBackground.setImageTintList(ColorStateList.valueOf(interactionTypeBackgroundColor))
+            imageIfaceBackground.visibility = View.VISIBLE
+            val interactionTypeIconDrawable = ContextCompat.getDrawable(context, R.drawable.ic_interaction_type_nfc)
+            imageIfaceIcon.setImageDrawable(interactionTypeIconDrawable)
+            imageIfaceIcon.visibility = View.VISIBLE
+        } else {
+            imageIfaceIcon.visibility = View.GONE
+            imageIfaceBackground.visibility = View.GONE
+        }
 
         textLogTitle.text = getTitleText(log)
 
@@ -80,7 +91,9 @@ class InteractionLogViewHolder (
     private fun getTitleText(log: InteractionLog): String {
         return when (log.type) {
             InteractionType.NFC_TAG_RAW -> if (IsoDep::class.java.simpleName == log.metadata) "Read NFC card" else "Read ${log.metadata} NFC card"
-            else -> "Emulate NFC card"
+            InteractionType.HCE_NORMAL, InteractionType.HCE_NFC_F -> "Emulate NFC card"
+            InteractionType.BLE_GATT_INTERACTION -> "Bluetooth communication"
+            else -> "Captured communication"
         }
     }
 
