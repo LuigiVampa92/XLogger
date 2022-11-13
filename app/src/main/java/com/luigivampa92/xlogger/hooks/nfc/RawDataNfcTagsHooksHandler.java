@@ -11,7 +11,6 @@ import android.nfc.tech.NfcB;
 import android.nfc.tech.NfcF;
 import android.nfc.tech.NfcV;
 import android.nfc.tech.TagTechnology;
-import android.os.Handler;
 
 import com.luigivampa92.xlogger.BroadcastConstants;
 import com.luigivampa92.xlogger.DataUtils;
@@ -24,24 +23,30 @@ import com.luigivampa92.xlogger.hooks.XLog;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
-
-// todo gms and gpay (!) Looper.prepare - TRY ScheduledExecutorService !
 
 public class RawDataNfcTagsHooksHandler implements HooksHandler {
 
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppContext;
     private List<InteractionLogEntry> currentLogEntries;
-    private final Handler completionHandler = new Handler();
+    private String currentTagTechValue;
     private final int completionTimerValueForNfc = 1500;
+    private ScheduledExecutorService timerService;
 
     public RawDataNfcTagsHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppContext) {
         this.lpparam = lpparam;
         this.hookedAppContext = hookedAppContext;
+        if (timerService == null || timerService.isShutdown() || timerService.isTerminated()) {
+            timerService = Executors.newSingleThreadScheduledExecutor();
+            timerService.scheduleAtFixedRate(timeoutCheck(), completionTimerValueForNfc, completionTimerValueForNfc, TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
@@ -99,6 +104,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                                                 null,
                                                 null
                                         );
+                                        currentTagTechValue = tagTechnologyClass.getSimpleName();
                                         currentLogEntries.add(logEntry);
                                     }
                                 } else {
@@ -121,14 +127,13 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                                                 null,
                                                 null
                                         );
+                                        currentTagTechValue = tagTechnologyClass.getSimpleName();
                                         currentLogEntries.add(logEntry);
                                     }
                                 } else {
                                     XLog.d("NFC RX ERROR: empty response apdu");
                                 }
                             }
-                            completionHandler.removeCallbacksAndMessages(null);
-                            completionHandler.postDelayed(completeSessionRecordByTimeout(tagTechnologyClass.getSimpleName()), completionTimerValueForNfc);
                         }
                     });
             XLog.d("Init nfc hooks for package %s - tag technology %s - complete", lpparam.packageName, tagTechnologyClass.getSimpleName());
@@ -155,8 +160,7 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
                 });
     }
 
-    private void transmitInteractionLog(final String tagTechnologyClassName) {
-        completionHandler.removeCallbacksAndMessages(null);
+    private synchronized void transmitInteractionLog(final String tagTechnologyClassName) {
         if (currentLogEntries != null && !currentLogEntries.isEmpty()) {
             InteractionLog interactionLog = new InteractionLog(InteractionType.NFC_TAG_RAW, lpparam.packageName, tagTechnologyClassName, (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
             Intent sendInteractionLogRecordIntent = new Intent();
@@ -165,17 +169,31 @@ public class RawDataNfcTagsHooksHandler implements HooksHandler {
             sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG);
             sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
             hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
+            clearCurrentData();
         }
-        currentLogEntries = null;
     }
 
-    private Runnable completeSessionRecordByTimeout(final String tagTechnologyClassName) {
+    private Runnable timeoutCheck() {
         return new Runnable() {
             @Override
             public void run() {
-                XLog.d("Nfc interaction - tag technology %s - session record stopped by timeout", tagTechnologyClassName);
-                transmitInteractionLog(tagTechnologyClassName);
+                if (currentLogEntries != null && !currentLogEntries.isEmpty()) {
+                    InteractionLogEntry lastEntry = currentLogEntries.get(currentLogEntries.size() - 1);
+                    boolean timeout = (System.currentTimeMillis() - lastEntry.getTimestamp()) >= completionTimerValueForNfc;
+                    if (timeout) {
+                        String tagTechnologyClassName = (currentTagTechValue != null && !currentTagTechValue.isEmpty()) ? currentTagTechValue : "";
+                        XLog.d("Nfc interaction - tag technology %s - session record stopped by timeout", tagTechnologyClassName);
+                        transmitInteractionLog(tagTechnologyClassName);
+                    }
+                }
             }
         };
+    }
+
+    private void clearCurrentData() {
+        currentTagTechValue = null;
+        if (currentLogEntries != null) {
+            currentLogEntries.clear();
+        }
     }
 }

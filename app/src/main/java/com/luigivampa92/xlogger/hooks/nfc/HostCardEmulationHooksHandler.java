@@ -8,7 +8,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.nfc.cardemulation.HostApduService;
 import android.os.Bundle;
-import android.os.Handler;
 
 import com.luigivampa92.xlogger.BroadcastConstants;
 import com.luigivampa92.xlogger.DataUtils;
@@ -26,6 +25,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
@@ -37,12 +39,17 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
     private final Context hookedAppContext;
     private Set<Class<?>> hceServices;
     private List<InteractionLogEntry> currentLogEntries;
-    private static final Handler completionHandler = new Handler();
-    private static final int completionTimerValueForNfc = 1500;
+    private String currentServiceValue;
+    private final int completionTimerValueForNfc = 1500;
+    private ScheduledExecutorService timerService;
 
     public HostCardEmulationHooksHandler(XC_LoadPackage.LoadPackageParam lpparam, Context hookedAppContext) {
         this.lpparam = lpparam;
         this.hookedAppContext = hookedAppContext;
+        if (timerService == null || timerService.isShutdown() || timerService.isTerminated()) {
+            timerService = Executors.newSingleThreadScheduledExecutor();
+            timerService.scheduleAtFixedRate(timeoutCheck(), completionTimerValueForNfc, completionTimerValueForNfc, TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
@@ -190,9 +197,8 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                             null,
                                             null
                                     );
+                                    currentServiceValue = serviceClass.getCanonicalName();
                                     currentLogEntries.add(logEntry);
-                                    completionHandler.removeCallbacksAndMessages(null);
-                                    completionHandler.postDelayed(completeSessionRecordByTimeout(serviceClass.getCanonicalName()), completionTimerValueForNfc);
                                 } else {
                                     XLog.d("HCE ERROR: received empty command apdu");
                                 }
@@ -228,9 +234,8 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                             null,
                                             null
                                     );
+                                    currentServiceValue = serviceClass.getCanonicalName();
                                     currentLogEntries.add(logEntry);
-                                    completionHandler.removeCallbacksAndMessages(null);
-                                    completionHandler.postDelayed(completeSessionRecordByTimeout(serviceClass.getCanonicalName()), completionTimerValueForNfc);
                                 } else {
                                     XLog.d("HCE ERROR: transmitted empty response apdu");
                                 }
@@ -279,9 +284,8 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
                                             null,
                                             null
                                     );
+                                    currentServiceValue = serviceClass.getCanonicalName();
                                     currentLogEntries.add(logEntry);
-                                    completionHandler.removeCallbacksAndMessages(null);
-                                    completionHandler.postDelayed(completeSessionRecordByTimeout(serviceClass.getCanonicalName()), completionTimerValueForNfc);
                                 } else {
                                     XLog.d("HCE ERROR: transmitted empty response apdu");
                                 }
@@ -323,8 +327,7 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
         return hasNfcFeature && hasNfcHceFeature;
     }
 
-    private void transmitInteractionLog(final String serviceClassName) {
-        completionHandler.removeCallbacksAndMessages(null);
+    private synchronized void transmitInteractionLog(final String serviceClassName) {
         if (currentLogEntries != null && !currentLogEntries.isEmpty()) {
             InteractionLog interactionLog = new InteractionLog(InteractionType.HCE_NORMAL, lpparam.packageName, serviceClassName, (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
             Intent sendInteractionLogRecordIntent = new Intent();
@@ -333,17 +336,31 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
             sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG);
             sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
             hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
+            clearCurrentData();
         }
-        currentLogEntries = null;
     }
 
-    private Runnable completeSessionRecordByTimeout(final String serviceClassName) {
+    private Runnable timeoutCheck() {
         return new Runnable() {
             @Override
             public void run() {
-                XLog.d("Emulation deactivated by timeout - %s - session record stopped", serviceClassName);
-                transmitInteractionLog(serviceClassName);
+                if (currentLogEntries != null && !currentLogEntries.isEmpty()) {
+                    InteractionLogEntry lastEntry = currentLogEntries.get(currentLogEntries.size() - 1);
+                    boolean timeout = (System.currentTimeMillis() - lastEntry.getTimestamp()) >= completionTimerValueForNfc;
+                    if (timeout) {
+                        String serviceClassName = (currentServiceValue != null && !currentServiceValue.isEmpty()) ? currentServiceValue : "";
+                        XLog.d("Emulation deactivated by timeout - %s - session record stopped", serviceClassName);
+                        transmitInteractionLog(serviceClassName);
+                    }
+                }
             }
         };
+    }
+
+    private void clearCurrentData() {
+        currentServiceValue = null;
+        if (currentLogEntries != null) {
+            currentLogEntries.clear();
+        }
     }
 }
