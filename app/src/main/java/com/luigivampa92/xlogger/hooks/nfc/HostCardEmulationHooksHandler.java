@@ -325,13 +325,15 @@ public class HostCardEmulationHooksHandler implements HooksHandler {
 
     private void transmitInteractionLog(final String serviceClassName) {
         completionHandler.removeCallbacksAndMessages(null);
-        InteractionLog interactionLog = new InteractionLog(InteractionType.HCE_NORMAL, lpparam.packageName, serviceClassName, (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
-        Intent sendInteractionLogRecordIntent = new Intent();
-        sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
-        sendInteractionLogRecordIntent.setComponent(new ComponentName(BroadcastConstants.XLOGGER_PACKAGE, BroadcastConstants.INTERACTION_LOG_RECEIVER));
-        sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG);
-        sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
-        hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
+        if (currentLogEntries != null && !currentLogEntries.isEmpty()) {
+            InteractionLog interactionLog = new InteractionLog(InteractionType.HCE_NORMAL, lpparam.packageName, serviceClassName, (currentLogEntries != null ? new ArrayList<>(currentLogEntries) : new ArrayList<>()));
+            Intent sendInteractionLogRecordIntent = new Intent();
+            sendInteractionLogRecordIntent.setPackage(BroadcastConstants.XLOGGER_PACKAGE);
+            sendInteractionLogRecordIntent.setComponent(new ComponentName(BroadcastConstants.XLOGGER_PACKAGE, BroadcastConstants.INTERACTION_LOG_RECEIVER));
+            sendInteractionLogRecordIntent.setAction(BroadcastConstants.ACTION_RECEIVE_INTERACTION_LOG);
+            sendInteractionLogRecordIntent.putExtra(BroadcastConstants.EXTRA_DATA, interactionLog);
+            hookedAppContext.sendBroadcast(sendInteractionLogRecordIntent);
+        }
         currentLogEntries = null;
     }
 
