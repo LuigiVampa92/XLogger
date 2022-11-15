@@ -74,9 +74,9 @@ public class HooksApplicator implements IXposedHookLoadPackage {
         if (!ConditionUtils.hasBluetooth(hookedAppContext)) {
             XLog.d("Bluetooth hooks for package %s will NOT be applied - app does not use bluetooth", lpparam.packageName);
         } else {
-            hooksHandlers.add(new BluetoothHooksHandler(lpparam, hookedAppContext, XLog.DEBUG));
-            hooksHandlers.add(new BluetoothLeScannerHooksHandler(lpparam, hookedAppContext, XLog.DEBUG));
-            hooksHandlers.add(new BluetoothLeAdvertiserHooksHandler(lpparam, hookedAppContext, XLog.DEBUG));
+            hooksHandlers.add(new BluetoothHooksHandler(lpparam, hookedAppContext, BuildConfig.LOG_LEVEL));
+            hooksHandlers.add(new BluetoothLeScannerHooksHandler(lpparam, hookedAppContext, BuildConfig.LOG_LEVEL));
+            hooksHandlers.add(new BluetoothLeAdvertiserHooksHandler(lpparam, hookedAppContext, BuildConfig.LOG_LEVEL));
         }
 
         for (HooksHandler handler : hooksHandlers) {
