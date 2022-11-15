@@ -16,4 +16,7 @@
     <color name="color_main_background">#FFFFFF</color>
     <color name="color_item_log_background">#FAFAFA</color>
 
+    <color name="color_log_entry_first">#F3F3F3</color>
+    <color name="color_log_entry_second">#DDDDDD</color>
+
 </resources>

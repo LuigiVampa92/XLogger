@@ -4,4 +4,8 @@
     <color name="color_main_secondary">#D2D2D2</color>
     <color name="color_main_background">#000000</color>
     <color name="color_item_log_background">#222222</color>
+
+    <color name="color_log_entry_first">#F3F3F3</color>
+    <color name="color_log_entry_second">#DDDDDD</color>
+
 </resources>

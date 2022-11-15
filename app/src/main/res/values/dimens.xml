@@ -4,4 +4,11 @@
     <dimen name="size_app_description">80dp</dimen>
     <dimen name="xposed_disabled_notification_height">64dp</dimen>
     <dimen name="xposed_disabled_notification_corner_radius">8dp</dimen>
+
+    <dimen name="size_log_entry_margin_vertical">4dp</dimen>
+    <dimen name="size_log_entry_margin_horizontal">8dp</dimen>
+    <dimen name="size_log_entry_peer">80dp</dimen>
+    <dimen name="size_log_entry_direction">40dp</dimen>
+    <dimen name="size_log_entry_font">12dp</dimen>
+
 </resources>
