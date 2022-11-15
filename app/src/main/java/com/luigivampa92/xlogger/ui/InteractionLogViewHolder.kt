@@ -19,13 +19,13 @@ import com.luigivampa92.xlogger.domain.InteractionType
 import java.text.DateFormat
 import java.util.*
 
+// todo texts for payment card, nearby, transit card etc
+
 class InteractionLogViewHolder (
     inflater: LayoutInflater,
     container: ViewGroup,
     private val onItemClickListener: ((InteractionLog) -> Unit)? = null,
 ) : RecyclerView.ViewHolder(inflater.inflate(R.layout.item_interaction_log, container, false)) {
-
-    // todo fix markup
 
     val viewForeground: ConstraintLayout
     private val imageAppIcon: ImageView
@@ -84,29 +84,31 @@ class InteractionLogViewHolder (
         }
     }
 
-    // todo texts for payment card, nearby, transit card etc
-    // todo isodep is not text
-    // todo nfc f emulation - separated
 
     private fun getTitleText(log: InteractionLog): String {
         return when (log.type) {
-            InteractionType.NFC_TAG_RAW -> if (IsoDep::class.java.simpleName == log.metadata) "Read NFC card" else "Read ${log.metadata} NFC card"
-            InteractionType.HCE_NORMAL, InteractionType.HCE_NFC_F -> "Emulate NFC card"
-            InteractionType.BLE_GATT_INTERACTION -> "Bluetooth communication"
-            else -> "Captured communication"
+            InteractionType.BLE_GATT_INTERACTION -> itemView.context.getString(R.string.text_interaction_log_title_ble_gatt)
+            InteractionType.NFC_TAG_RAW -> if (log.metadata.isNullOrBlank() || log.metadata == IsoDep::class.java.simpleName) {
+                itemView.context.getString(R.string.text_interaction_log_title_read_card)
+            } else {
+                itemView.context.getString(R.string.text_interaction_log_title_read_card_specific, log.metadata)
+            }
+            InteractionType.HCE_NORMAL -> itemView.context.getString(R.string.text_interaction_log_title_hce)
+            InteractionType.HCE_NFC_F -> itemView.context.getString(R.string.text_interaction_log_title_hce_f)
+            else -> itemView.context.getString(R.string.text_interaction_log_title_unknown)
         }
     }
 
-    // todo common logic
-
     private fun setAppData(context: Context, log: InteractionLog) {
         val packageManager = context.packageManager
-
         try {
             val applicationInfo = packageManager.getApplicationInfo(log.packageName, 0)
             val appName = applicationInfo.loadLabel(packageManager).toString()
             val appIcon: Drawable = applicationInfo.loadIcon(packageManager)
 
+            // an exception for google pay
+            // since its actual hce service is inside google services package, NOT the google pay package itself
+            // package data are replaced with google pay for more clarity and convenience
             if (
                 "com.google.android.gms" == log.packageName
                 && "com.google.android.gms.tapandpay.hce.service.TpHceChimeraService" == log.metadata
@@ -125,7 +127,6 @@ class InteractionLogViewHolder (
                 imageAppIcon.setImageDrawable(appIcon)
                 textAppName.setText(appName)
             }
-
         } catch (e: PackageManager.NameNotFoundException) {
             val defaultIcon = ContextCompat.getDrawable(context, android.R.drawable.sym_def_app_icon)
             val defaultName = log.packageName

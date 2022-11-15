@@ -2,8 +2,9 @@
 <resources>
     <string name="app_name">XLogger</string>
     <string name="xposed_module_description">Extracts communication log of device physical interfaces - NFC, Bluetooth, etc</string>
-    <string-array name="xposed_scope_nfc">
+    <string-array name="xposed_scope_xlogger">
         <item>com.google.android.gms</item>
         <item>com.google.android.apps.walletnfcrel</item>
     </string-array>
+    <integer name="xposed_disabled_notification_timeout">5000</integer>
 </resources>

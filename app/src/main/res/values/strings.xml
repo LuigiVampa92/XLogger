@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="text_general_module_disabled">Xposed module is disabled :(</string>
+
+    <string name="xposed_disabled_notification_title">XLogger\'s xposed module is disabled :(</string>
+
+    <string name="text_interaction_log_title_unknown">Captured communication</string>
+    <string name="text_interaction_log_title_ble_gatt">Bluetooth communication</string>
+    <string name="text_interaction_log_title_read_card">Read NFC card</string>
+    <string name="text_interaction_log_title_read_card_specific">Read %s card</string>
+    <string name="text_interaction_log_title_hce">Emulate NFC card</string>
+    <string name="text_interaction_log_title_hce_f">Emulate NFC-F card</string>
+
+    <string name="text_interaction_log_entry_delete">Record deleted</string>
+    <string name="text_interaction_log_entry_delete_cancel">Cancel</string>
+
 </resources>

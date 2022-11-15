@@ -28,6 +28,11 @@ class InteractionLogAdapter (
 
     fun getItem(position: Int): InteractionLog = items[position]
 
+    fun insertItem(item: InteractionLog, position: Int) {
+        items.add(position, item)
+        notifyItemInserted(position)
+    }
+
     fun removeItem(position: Int) {
         items.removeAt(position)
         notifyItemRemoved(position)
