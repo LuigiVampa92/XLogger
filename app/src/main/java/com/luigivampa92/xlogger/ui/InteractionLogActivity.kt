@@ -3,8 +3,8 @@ package com.luigivampa92.xlogger.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.TextView
-import com.luigivampa92.xlogger.DataUtils
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.luigivampa92.xlogger.R
 import com.luigivampa92.xlogger.domain.InteractionLog
 
@@ -22,8 +22,10 @@ class InteractionLogActivity : BaseActivity() {
         }
     }
 
-    private lateinit var logTextView: TextView
     private lateinit var interactionLog: InteractionLog
+    private lateinit var recyclerViewLogEntries: RecyclerView
+    private lateinit var recyclerViewLogEntriesAdapter: InteractionLogEntryAdapter
+    private lateinit var recyclerViewLogEntriesLayoutManager: LinearLayoutManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,10 +39,13 @@ class InteractionLogActivity : BaseActivity() {
             interactionLog = receivedLog
         }
 
-        logTextView = findViewById(R.id.text_log_area)
+        recyclerViewLogEntries = findViewById(R.id.recycler_view_log_entires)
+        recyclerViewLogEntriesAdapter = InteractionLogEntryAdapter()
+        recyclerViewLogEntriesLayoutManager = LinearLayoutManager(this)
+        recyclerViewLogEntries.adapter = recyclerViewLogEntriesAdapter
+        recyclerViewLogEntries.layoutManager = recyclerViewLogEntriesLayoutManager
 
-        val print = interactionLog.entries.joinToString("\n\n") { DataUtils.toHexString(it.data) }
-        logTextView.setText(print)
+        recyclerViewLogEntriesAdapter.setItems(interactionLog.entries)
 
     }
 
