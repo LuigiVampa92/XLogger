@@ -3,6 +3,9 @@
 
     <string name="xposed_disabled_notification_title">XLogger\'s xposed module is disabled :(</string>
 
+    <string name="text_load_log_records_empty">No records yet</string>
+    <string name="text_load_log_records_error">Error loading records</string>
+
     <string name="text_interaction_log_title_unknown">Captured communication</string>
     <string name="text_interaction_log_title_ble_gatt">Bluetooth communication</string>
     <string name="text_interaction_log_title_read_card">Read NFC card</string>

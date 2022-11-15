@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.animation.AnimationUtils
+import android.widget.TextView
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,18 +21,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 
+// todo pagination !
+
 class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTouchHelperListener {
 
-    // todo нормальный билдскрипт
-    // todo app icon
-    // todo make pcap file
-    // todo ensure dark theme
-    // todo no saved records
-
-
-    // todo pagination !
-
     private lateinit var bannerModuleDisabled: View
+    private lateinit var progressView: View
+    private lateinit var loadRecordsMessageTextView: TextView
 
     private lateinit var recyclerViewLogRecords: RecyclerView
     private lateinit var logRecordsAdapter: InteractionLogAdapter
@@ -46,6 +42,9 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
         setContentView(R.layout.activity_main)
         setupModuleBanner()
 
+        progressView = findViewById(R.id.progress_bar_load_log_records)
+        loadRecordsMessageTextView = findViewById(R.id.text_load_log_records_message)
+
         recyclerViewLogRecords = findViewById(R.id.recycler_view_log_records)
         logRecordsAdapter = InteractionLogAdapter(this::showLogDetails)
         logRecordsLayoutManager = LinearLayoutManager(this)
@@ -58,6 +57,7 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
         appDatabase = AppDatabase.getInstance(this.applicationContext)
         interactionLogDao = appDatabase.interactionLogDao()
 
+        setStateLoading()
         currentOperation = interactionLogDao.all
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -65,9 +65,10 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
                 {
                     val logRecords = it.map { it.toInteractionLog() }
                     logRecordsAdapter.setLogRecords(logRecords)
+                    updateContentState()
                 },
                 {
-                    val a = "a"  // todo error state
+                    setStateError()
                 }
             )
     }
@@ -102,6 +103,40 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
         }
     }
 
+    private fun setStateError() {
+        recyclerViewLogRecords.visibility = View.GONE
+        progressView.visibility = View.GONE
+        loadRecordsMessageTextView.visibility = View.VISIBLE
+        loadRecordsMessageTextView.setText(getString(R.string.text_load_log_records_error))
+    }
+
+    private fun setStateEmpty() {
+        recyclerViewLogRecords.visibility = View.GONE
+        progressView.visibility = View.GONE
+        loadRecordsMessageTextView.visibility = View.VISIBLE
+        loadRecordsMessageTextView.setText(getString(R.string.text_load_log_records_empty))
+    }
+
+    private fun setStateLoading() {
+        recyclerViewLogRecords.visibility = View.GONE
+        progressView.visibility = View.VISIBLE
+        loadRecordsMessageTextView.visibility = View.GONE
+    }
+
+    private fun setStateContent() {
+        recyclerViewLogRecords.visibility = View.VISIBLE
+        progressView.visibility = View.GONE
+        loadRecordsMessageTextView.visibility = View.GONE
+    }
+
+    private fun updateContentState() {
+        if (logRecordsAdapter.itemCount > 0) {
+            setStateContent()
+        } else {
+            setStateEmpty()
+        }
+    }
+
     private fun showLogDetails(log: InteractionLog) {
         startActivity(InteractionLogActivity.newIntent(this, log))
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
@@ -112,52 +147,28 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
             val record = logRecordsAdapter.getItem(position)
             deleteRecord(record)
             logRecordsAdapter.removeItem(position)
+            updateContentState()
             val snackbar = Snackbar.make(recyclerViewLogRecords, R.string.text_interaction_log_entry_delete, Snackbar.LENGTH_LONG)
             snackbar.setAction(R.string.text_interaction_log_entry_delete_cancel) { _ ->
                 saveRecord(record)
                 logRecordsAdapter.insertItem(record, position)
+                updateContentState()
             }
             snackbar.show()
         }
     }
 
     private fun saveRecord(record: InteractionLog) {
-        val start = System.currentTimeMillis()  // todo remove
         currentOperation = interactionLogDao.insert(InteractionLogEntity.fromInteractionLog(record))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    val stop = System.currentTimeMillis()
-                    val spent = stop - start
-                    println("XLOGGER - SUCCESS - SAVE RECORD $record - $spent ms spent")  // todo remove
-                },
-                {
-                    val stop = System.currentTimeMillis()
-                    val spent = stop - start
-                    println("XLOGGER - ERROR - SAVE RECORD $record - $spent ms spent")  // todo remove
-                }
-            )
+            .subscribe({}, {})
     }
 
     private fun deleteRecord(record: InteractionLog) {
-        val start = System.currentTimeMillis()  // todo remove
         currentOperation = interactionLogDao.delete(InteractionLogEntity.fromInteractionLog(record))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    val stop = System.currentTimeMillis()
-                    val spent = stop - start
-                    println("XLOGGER - SUCCESS - DELETE RECORD $record - $spent ms spent")  // todo remove
-                },
-                {
-                    val stop = System.currentTimeMillis()
-                    val spent = stop - start
-                    println("XLOGGER - ERROR - DELETE RECORD $record - $spent ms spent")  // todo remove
-                }
-            )
+            .subscribe({}, {})
     }
-
-
 }
