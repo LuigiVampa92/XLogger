@@ -2,24 +2,68 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+    <TextView
+        android:id="@+id/text_nfc_header_data"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:textAlignment="viewStart"
+        android:fontFamily="monospace"
+        android:textSize="10dp"
+        android:text="dasd\nfds\nfds\nfds"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/button_share_log"
+        />
 
-    <!--    TODO :-->
-    <!--    app name-->
-    <!--    app icon ?-->
-    <!--    interaction type-->
-    <!--    time-->
-    <!--    date-->
-    <!--    full interaction time-->
-    <!--    metadata-->
+    <ImageView
+        android:id="@+id/button_share_log"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:padding="4dp"
+        android:background="@drawable/bg_stroke_thin"
+        android:foreground="?selectableItemBackground"
+        app:srcCompat="@drawable/ic_share"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="contentDescription"
+        />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier_header_nfc"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="text_nfc_header_data, button_share_log"
+        />
 
     <View
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="@color/color_red"
-        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/view_bottom_line"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@color/color_black"
+        app:layout_constraintTop_toBottomOf="@+id/barrier_header_nfc"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
+    <View
+        android:id="@+id/view_gap_bottom"
+        android:layout_width="0dp"
+        android:layout_height="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/view_bottom_line"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         />

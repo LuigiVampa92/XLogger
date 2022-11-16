@@ -16,4 +16,9 @@
     <string name="text_interaction_log_entry_delete">Record deleted</string>
     <string name="text_interaction_log_entry_delete_cancel">Cancel</string>
 
+    <string name="text_timeunit_ms">ms</string>
+    <string name="text_timeunit_sec">s</string>
+    <string name="text_timeunit_min">m</string>
+    <string name="text_timeunit_hour">h</string>
+
 </resources>
