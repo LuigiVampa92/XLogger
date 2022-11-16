@@ -112,21 +112,6 @@ public class InteractionLogEntry implements Parcelable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        InteractionLogEntry that = (InteractionLogEntry) o;
-        return timestamp == that.timestamp
-                && action.getValue() == that.action.getValue()
-                && Arrays.equals(data, that.data)
-                && Objects.equals(message, that.message)
-                && Objects.equals(sender, that.sender)
-                && Objects.equals(receiver, that.receiver)
-                && Objects.equals(serviceName, that.serviceName)
-                && Objects.equals(characteristicName, that.characteristicName);
-    }
-
-    @Override
     public int hashCode() {
         int result = Objects.hash(
                 timestamp,
@@ -142,16 +127,17 @@ public class InteractionLogEntry implements Parcelable {
     }
 
     @Override
-    public String toString() {
-        return "InteractionLogEntry{" +
-                "timestamp=" + timestamp +
-                ", action=" + action.name() +
-                ", data=" + DataUtils.toHexString(data) +
-                ", message='" + (message != null ? message : "null") + '\'' +
-                ", sender='" + (sender != null ? sender : "null") + '\'' +
-                ", receiver='" + (receiver != null ? receiver : "null") + '\'' +
-                ", serviceName='" + (serviceName != null ? serviceName : "null") + '\'' +
-                ", characteristicName='" + (characteristicName != null ? characteristicName : "null") + '\'' +
-                '}';
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InteractionLogEntry that = (InteractionLogEntry) o;
+        return timestamp == that.timestamp
+                && action.getValue() == that.action.getValue()
+                && Arrays.equals(data, that.data)
+                && Objects.equals(message, that.message)
+                && Objects.equals(sender, that.sender)
+                && Objects.equals(receiver, that.receiver)
+                && Objects.equals(serviceName, that.serviceName)
+                && Objects.equals(characteristicName, that.characteristicName);
     }
 }

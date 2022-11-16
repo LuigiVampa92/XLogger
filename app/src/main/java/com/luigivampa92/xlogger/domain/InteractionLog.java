@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.List;
+import java.util.Objects;
 
 public final class InteractionLog implements Parcelable {
 
@@ -61,6 +62,31 @@ public final class InteractionLog implements Parcelable {
         entries = in.createTypedArrayList(InteractionLogEntry.CREATOR);
         timestamp = in.readLong();
         duration = in.readLong();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                type.getValue(),
+                packageName,
+                metadata,
+                entries,
+                timestamp,
+                duration
+        );
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InteractionLog that = (InteractionLog) o;
+        return timestamp == that.timestamp
+                && duration == that.duration
+                && type.getValue() == that.type.getValue()
+                && Objects.equals(packageName, that.packageName)
+                && Objects.equals(metadata, that.metadata)
+                && Objects.equals(entries, that.entries);
     }
 
     @Override
