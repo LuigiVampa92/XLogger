@@ -5,12 +5,18 @@
     <dimen name="xposed_disabled_notification_height">64dp</dimen>
     <dimen name="xposed_disabled_notification_corner_radius">8dp</dimen>
 
+    <dimen name="size_button_share_log">32dp</dimen>
+    <dimen name="size_log_header_divider_width">2dp</dimen>
+    <dimen name="size_log_header_divider_side_margin">16dp</dimen>
+    <dimen name="size_log_entry_direction">40dp</dimen>
     <dimen name="size_log_entry_margin_vertical">4dp</dimen>
     <dimen name="size_log_entry_margin_horizontal">8dp</dimen>
-    <dimen name="size_log_entry_peer">80dp</dimen>
-    <dimen name="size_log_entry_ble_peer">120dp</dimen>
-    <dimen name="size_log_entry_direction">40dp</dimen>
+    <dimen name="size_log_nfc_entry_peer">80dp</dimen>
     <dimen name="size_log_nfc_entry_font">12dp</dimen>
+    <dimen name="size_log_header_font">10dp</dimen>
+    <dimen name="size_log_header_margin_vertical">8dp</dimen>
+    <dimen name="size_log_header_margin_horizontal">8dp</dimen>
+    <dimen name="size_log_ble_entry_peer">120dp</dimen>
     <dimen name="size_log_ble_entry_font">12dp</dimen>
     <dimen name="size_log_ble_margin_metadata">4dp</dimen>
     <dimen name="size_log_ble_entry_font_peers">8dp</dimen>

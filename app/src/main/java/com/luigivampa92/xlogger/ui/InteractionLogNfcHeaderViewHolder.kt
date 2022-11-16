@@ -12,6 +12,8 @@ import java.text.DateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
+// todo onclick
+
 class InteractionLogNfcHeaderViewHolder (
     inflater: LayoutInflater,
     container: ViewGroup,
@@ -31,14 +33,20 @@ class InteractionLogNfcHeaderViewHolder (
         sb.appendLine("NFC communication captured")
         sb.appendLine("By app: \"${getAppName(log.packageName)}\"")
         sb.appendLine("(packageName: \"${log.packageName}\")")
+
+        sb.appendLine("")
+        sb.appendLine("Involved devices:")
         if (log.type == InteractionType.NFC_TAG_RAW) {
-            sb.appendLine("Between this device [ DEVICE ] as NFC reader and another device [ CARD ] as NFC tag")
+            sb.appendLine(" - this device [ DEVICE ] as NFC reader")
+            sb.appendLine(" - another device [ CARD ] as NFC tag")
             sb.appendLine("NFC tag technology: ${log.metadata}")
         }
         if (log.type == InteractionType.HCE_NORMAL || log.type == InteractionType.HCE_NFC_F) {
-            sb.appendLine("Between this device [ DEVICE ] emulating an NFC tag and another device [ TERMINAL ] as NFC reader")
+            sb.appendLine(" - this device [ DEVICE ] emulating an NFC tag")
+            sb.appendLine(" - another device [ TERMINAL ] as NFC reader")
             sb.appendLine("Emulation service: ${log.metadata}")
         }
+        sb.appendLine("")
         sb.appendLine("Total transferred APDUs: ${log.entries.size}")
         sb.appendLine("Date and time: ${formatDateAndTimeValue(log.timestamp)}")
         sb.appendLine("Total time spent: ${formatElapsedTimeValue(log.duration)}")

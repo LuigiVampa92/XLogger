@@ -26,7 +26,7 @@
 
     <TextView
         android:id="@+id/text_entry_sender"
-        android:layout_width="@dimen/size_log_entry_ble_peer"
+        android:layout_width="@dimen/size_log_ble_entry_peer"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/size_log_entry_margin_horizontal"
         android:fontFamily="monospace"
@@ -39,7 +39,7 @@
 
     <TextView
         android:id="@+id/text_entry_operation"
-        android:layout_width="@dimen/size_log_entry_ble_peer"
+        android:layout_width="@dimen/size_log_ble_entry_peer"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/size_log_entry_margin_horizontal"
         android:fontFamily="monospace"
@@ -50,7 +50,7 @@
 
     <TextView
         android:id="@+id/text_entry_receiver"
-        android:layout_width="@dimen/size_log_entry_ble_peer"
+        android:layout_width="@dimen/size_log_ble_entry_peer"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/size_log_entry_margin_horizontal"
         android:fontFamily="monospace"
@@ -63,7 +63,7 @@
 
     <TextView
         android:id="@+id/text_entry_service_uuid"
-        android:layout_width="@dimen/size_log_entry_ble_peer"
+        android:layout_width="@dimen/size_log_ble_entry_peer"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/size_log_ble_margin_metadata"
         android:layout_marginStart="@dimen/size_log_entry_margin_horizontal"
@@ -75,7 +75,7 @@
 
     <TextView
         android:id="@+id/text_entry_characteristic_uuid"
-        android:layout_width="@dimen/size_log_entry_ble_peer"
+        android:layout_width="@dimen/size_log_ble_entry_peer"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/size_log_entry_margin_horizontal"
         android:fontFamily="monospace"

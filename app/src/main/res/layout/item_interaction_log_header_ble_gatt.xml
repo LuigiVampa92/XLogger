@@ -2,25 +2,66 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <!--    TODO :-->
-    <!--    app name-->
-    <!--    app icon ?-->
-    <!--    interaction type-->
-    <!--    time-->
-    <!--    date-->
-    <!--    full interaction time-->
-    <!--    metadata-->
-    <!--    services?-->
-    <!--    characteristics?-->
+    <TextView
+        android:id="@+id/text_ble_header_data"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/size_log_header_margin_vertical"
+        android:layout_marginStart="@dimen/size_log_header_margin_horizontal"
+        android:layout_marginEnd="@dimen/size_log_header_margin_horizontal"
+        android:textAlignment="viewStart"
+        android:fontFamily="monospace"
+        android:textSize="@dimen/size_log_header_font"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/button_share_log"
+        />
+
+    <ImageView
+        android:id="@+id/button_share_log"
+        android:layout_width="@dimen/size_button_share_log"
+        android:layout_height="@dimen/size_button_share_log"
+        android:layout_marginTop="@dimen/size_log_header_margin_vertical"
+        android:layout_marginEnd="@dimen/size_log_header_margin_horizontal"
+        android:padding="4dp"
+        android:background="@drawable/bg_stroke_thin"
+        android:foreground="?selectableItemBackground"
+        app:srcCompat="@drawable/ic_share"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="contentDescription"
+        />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier_header_ble"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="text_ble_header_data, button_share_log"
+        />
 
     <View
+        android:id="@+id/view_bottom_line"
         android:layout_width="0dp"
-        android:layout_height="50dp"
-        android:background="#00f"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_height="@dimen/size_log_header_divider_width"
+        android:layout_marginStart="@dimen/size_log_header_divider_side_margin"
+        android:layout_marginEnd="@dimen/size_log_header_divider_side_margin"
+        android:background="@color/color_black"
+        app:layout_constraintTop_toBottomOf="@+id/barrier_header_ble"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
+    <View
+        android:id="@+id/view_gap_bottom"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/size_log_header_margin_vertical"
+        app:layout_constraintTop_toBottomOf="@+id/view_bottom_line"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         />
