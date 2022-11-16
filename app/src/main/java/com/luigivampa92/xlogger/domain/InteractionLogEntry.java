@@ -3,8 +3,6 @@ package com.luigivampa92.xlogger.domain;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.luigivampa92.xlogger.DataUtils;
-
 import java.util.Arrays;
 import java.util.Objects;
 

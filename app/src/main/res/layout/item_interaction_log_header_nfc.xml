@@ -51,7 +51,7 @@
         android:layout_height="@dimen/size_log_header_divider_width"
         android:layout_marginStart="@dimen/size_log_header_divider_side_margin"
         android:layout_marginEnd="@dimen/size_log_header_divider_side_margin"
-        android:background="@color/color_black"
+        android:background="@color/color_log_entry_devider"
         app:layout_constraintTop_toBottomOf="@+id/barrier_header_nfc"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
