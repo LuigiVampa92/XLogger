@@ -45,8 +45,7 @@ class InteractionLogActivity : BaseActivity() {
         recyclerViewLogEntries.adapter = recyclerViewLogEntriesAdapter
         recyclerViewLogEntries.layoutManager = recyclerViewLogEntriesLayoutManager
 
-        recyclerViewLogEntriesAdapter.setItems(interactionLog.entries)
-
+        recyclerViewLogEntriesAdapter.setRecord(interactionLog)
     }
 
     override fun finish() {
