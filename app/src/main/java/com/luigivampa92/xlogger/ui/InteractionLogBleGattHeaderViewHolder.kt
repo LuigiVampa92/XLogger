@@ -35,8 +35,10 @@ class InteractionLogBleGattHeaderViewHolder (
         val sb = StringBuilder()
         log.packageName
         sb.appendLine("Bluetooth communication captured")
-        sb.appendLine("By app: \"${getAppName(log.packageName)}\"")
-        sb.appendLine("(packageName: \"${log.packageName}\")")
+        sb.appendLine("")
+        sb.appendLine("App:")
+        sb.appendLine(" - name: \"${getAppName(log.packageName)}\"")
+        sb.appendLine(" - packageName: \"${log.packageName}\"")
 
         sb.appendLine("")
         sb.appendLine("Bluetooth type: BLE")

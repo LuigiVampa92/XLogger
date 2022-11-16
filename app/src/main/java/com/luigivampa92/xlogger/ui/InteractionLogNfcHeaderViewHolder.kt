@@ -31,8 +31,10 @@ class InteractionLogNfcHeaderViewHolder (
         val sb = StringBuilder()
         log.packageName
         sb.appendLine("NFC communication captured")
-        sb.appendLine("By app: \"${getAppName(log.packageName)}\"")
-        sb.appendLine("(packageName: \"${log.packageName}\")")
+        sb.appendLine("")
+        sb.appendLine("App:")
+        sb.appendLine(" - name: \"${getAppName(log.packageName)}\"")
+        sb.appendLine(" - packageName: \"${log.packageName}\"")
 
         sb.appendLine("")
         sb.appendLine("Involved devices:")
