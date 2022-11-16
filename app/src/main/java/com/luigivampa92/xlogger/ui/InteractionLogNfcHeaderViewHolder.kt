@@ -75,27 +75,19 @@ class InteractionLogNfcHeaderViewHolder (
     // todo move common logic
     private fun formatElapsedTimeValue(timeMs: Long): String {
         val list = ArrayList<String>()
-        if (timeMs < 1000) {
-            val ms = timeMs % 1000
-            list.add("$ms" + itemView.context.getString(R.string.text_timeunit_ms))
+        val ms = timeMs % 1000
+        list.add("$ms" + itemView.context.getString(R.string.text_timeunit_ms))
+        val s = (timeMs / 1000) % 60
+        if (s > 0) {
+            list.add("$s" + itemView.context.getString(R.string.text_timeunit_sec))
         }
-        if (timeMs < (1000 * 60)) {
-            val s = (timeMs / 1000) % 60
-            if (s > 0) {
-                list.add("$s" + itemView.context.getString(R.string.text_timeunit_sec))
-            }
+        val m = (timeMs / (1000 * 60) % 60)
+        if (m > 0) {
+            list.add("$m" + itemView.context.getString(R.string.text_timeunit_min))
         }
-        if (timeMs < (1000 * 60 * 60)) {
-            val m = (timeMs / (1000 * 60) % 60)
-            if (m > 0) {
-                list.add("$m" + itemView.context.getString(R.string.text_timeunit_min))
-            }
-        }
-        if (timeMs < (1000 * 60 * 60 * 24)) {
-            val h = (timeMs / (1000 * 60 * 60) % 24)
-            if (h > 0) {
-                list.add("$h" + itemView.context.getString(R.string.text_timeunit_hour))
-            }
+        val h = (timeMs / (1000 * 60 * 60) % 24)
+        if (h > 0) {
+            list.add("$h" + itemView.context.getString(R.string.text_timeunit_hour))
         }
         return list.reversed().joinToString(" ")
     }
