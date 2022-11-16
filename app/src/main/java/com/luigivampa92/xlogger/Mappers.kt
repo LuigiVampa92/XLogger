@@ -1,3 +1,4 @@
+@file:JvmName("Mappers")
 package com.luigivampa92.xlogger
 
 import com.luigivampa92.xlogger.domain.InteractionLogEntry
