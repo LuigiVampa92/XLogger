@@ -8,7 +8,12 @@
     <dimen name="size_log_entry_margin_vertical">4dp</dimen>
     <dimen name="size_log_entry_margin_horizontal">8dp</dimen>
     <dimen name="size_log_entry_peer">80dp</dimen>
+    <dimen name="size_log_entry_ble_peer">120dp</dimen>
     <dimen name="size_log_entry_direction">40dp</dimen>
-    <dimen name="size_log_entry_font">12dp</dimen>
+    <dimen name="size_log_nfc_entry_font">12dp</dimen>
+    <dimen name="size_log_ble_entry_font">12dp</dimen>
+    <dimen name="size_log_ble_margin_metadata">4dp</dimen>
+    <dimen name="size_log_ble_entry_font_peers">8dp</dimen>
+    <dimen name="size_log_ble_entry_font_uuids">6dp</dimen>
 
 </resources>

@@ -7,5 +7,6 @@
 
     <color name="color_log_entry_first">#F3F3F3</color>
     <color name="color_log_entry_second">#DDDDDD</color>
+    <color name="color_log_entry_devider">#BBBBBB</color>
 
 </resources>

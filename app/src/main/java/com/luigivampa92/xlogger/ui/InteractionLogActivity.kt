@@ -3,6 +3,8 @@ package com.luigivampa92.xlogger.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.luigivampa92.xlogger.R
@@ -26,6 +28,7 @@ class InteractionLogActivity : BaseActivity() {
     private lateinit var recyclerViewLogEntries: RecyclerView
     private lateinit var recyclerViewLogEntriesAdapter: InteractionLogEntryAdapter
     private lateinit var recyclerViewLogEntriesLayoutManager: LinearLayoutManager
+    private lateinit var recyclerViewItemDecoration: DividerItemDecoration
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,8 +45,11 @@ class InteractionLogActivity : BaseActivity() {
         recyclerViewLogEntries = findViewById(R.id.recycler_view_log_entires)
         recyclerViewLogEntriesAdapter = InteractionLogEntryAdapter()
         recyclerViewLogEntriesLayoutManager = LinearLayoutManager(this)
+        recyclerViewItemDecoration = DividerItemDecoration(recyclerViewLogEntries.context, DividerItemDecoration.VERTICAL)
+        recyclerViewItemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider_line_horizontal)!!)
         recyclerViewLogEntries.adapter = recyclerViewLogEntriesAdapter
         recyclerViewLogEntries.layoutManager = recyclerViewLogEntriesLayoutManager
+        recyclerViewLogEntries.addItemDecoration(recyclerViewItemDecoration)
 
         recyclerViewLogEntriesAdapter.setRecord(interactionLog)
     }
