@@ -9,7 +9,7 @@ import com.luigivampa92.xlogger.DataUtils;
 import java.util.List;
 
 // todo : stupid solution tbh, should do something better
-class AdvertiseDataToStringConverter {
+public final class AdvertiseDataToStringConverter {
 
    private AdvertiseDataToStringConverter() {
       throw new IllegalAccessError("No instantiation!");

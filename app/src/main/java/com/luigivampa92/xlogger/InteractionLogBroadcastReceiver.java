@@ -15,7 +15,7 @@ import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
-public class InteractionLogBroadcastReceiver extends BroadcastReceiver {
+public final class InteractionLogBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {

@@ -4,7 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-class ConditionUtils {
+public final class ConditionUtils {
 
     private ConditionUtils() {
         throw new IllegalAccessError("No instantiation!");

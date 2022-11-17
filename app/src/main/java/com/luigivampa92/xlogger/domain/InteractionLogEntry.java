@@ -6,7 +6,7 @@ import android.os.Parcelable;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class InteractionLogEntry implements Parcelable {
+public final class InteractionLogEntry implements Parcelable {
 
     private final long timestamp;
     private final InteractionLogEntryAction action;

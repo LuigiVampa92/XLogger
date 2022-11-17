@@ -8,7 +8,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.nfc.cardemulation.HostNfcFService;
 import android.os.Bundle;
-import android.os.Handler;
 
 import com.luigivampa92.xlogger.BroadcastConstants;
 import com.luigivampa92.xlogger.DataUtils;
@@ -34,7 +33,7 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-public class HostNfcFEmulationHooksHandler implements HooksHandler {
+public final class HostNfcFEmulationHooksHandler implements HooksHandler {
 
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppContext;

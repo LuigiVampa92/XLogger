@@ -8,7 +8,7 @@ import com.luigivampa92.xlogger.DataUtils;
 import java.util.ArrayList;
 
 // todo : stupid solution tbh, should do something better
-class ScanFilterToStringConverter {
+public final class ScanFilterToStringConverter {
 
     private ScanFilterToStringConverter() {
         throw new IllegalAccessError("No instantiation!");

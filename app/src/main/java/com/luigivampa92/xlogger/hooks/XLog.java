@@ -4,7 +4,7 @@ import android.util.Log;
 
 import com.luigivampa92.xlogger.BuildConfig;
 
-public class XLog {
+public final class XLog {
 
     private static final boolean LOG_ENABLED = BuildConfig.LOGS_ENABLED;
     private static final String LOG_TAG = BuildConfig.LOG_TAG;

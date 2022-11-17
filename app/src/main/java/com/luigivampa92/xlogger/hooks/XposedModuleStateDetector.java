@@ -1,6 +1,6 @@
 package com.luigivampa92.xlogger.hooks;
 
-public class XposedModuleStateDetector {
+public final class XposedModuleStateDetector {
 
    public static final String KEY_XLOGGER_XPOSED_MODULE_ACTIVATED = "com.luigivampa92.xlogger.xposed.module.activated";
 

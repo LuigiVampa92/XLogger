@@ -18,7 +18,7 @@ import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 // This class applies hooks that track start of BLE advertisement - announcement to other devices of address and capabilities
-public class BluetoothLeAdvertiserHooksHandler implements HooksHandler {
+public final class BluetoothLeAdvertiserHooksHandler implements HooksHandler {
 
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppContext;

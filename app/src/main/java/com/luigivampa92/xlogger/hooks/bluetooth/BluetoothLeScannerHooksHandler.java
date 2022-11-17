@@ -18,7 +18,7 @@ import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 // This class applies hooks that track start of BLE scanning - searching of other devices
-public class BluetoothLeScannerHooksHandler implements HooksHandler {
+public final class BluetoothLeScannerHooksHandler implements HooksHandler {
 
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppContext;

@@ -33,7 +33,7 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-public class HostCardEmulationHooksHandler implements HooksHandler {
+public final class HostCardEmulationHooksHandler implements HooksHandler {
 
     private final XC_LoadPackage.LoadPackageParam lpparam;
     private final Context hookedAppContext;
