@@ -25,4 +25,7 @@
     <string name="text_share_log_intent_subject">Communication log from XLogger</string>
     <string name="text_share_log_intent_message">Sending a file containing communication log from XLogger</string>
 
+    <string name="text_interaction_log_menu_item_share">Share</string>
+    <string name="text_interaction_log_menu_item_delete">Delete</string>
+
 </resources>

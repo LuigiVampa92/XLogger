@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import com.luigivampa92.xlogger.InteractionLogSender
 import com.luigivampa92.xlogger.R
 import com.luigivampa92.xlogger.data.db.AppDatabase
 import com.luigivampa92.xlogger.data.db.InteractionLogDao
@@ -37,16 +38,19 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
     private lateinit var interactionLogDao: InteractionLogDao
     private var currentOperation: Disposable? = null
 
+    private lateinit var logSender: InteractionLogSender
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupModuleBanner()
+        logSender = InteractionLogSender(this)
 
         progressView = findViewById(R.id.progress_bar_load_log_records)
         loadRecordsMessageTextView = findViewById(R.id.text_load_log_records_message)
 
         recyclerViewLogRecords = findViewById(R.id.recycler_view_log_records)
-        logRecordsAdapter = InteractionLogAdapter(this::showLogDetails)
+        logRecordsAdapter = InteractionLogAdapter(this::showLogDetails, logSender::sendLog, this::getPositionAndRemove)
         logRecordsLayoutManager = LinearLayoutManager(this)
         recyclerViewLogRecords.adapter = logRecordsAdapter
         recyclerViewLogRecords.layoutManager = logRecordsLayoutManager
@@ -145,17 +149,26 @@ class MainActivity : BaseActivity(), RecyclerViewItemTouchHelper.RecyclerItemTou
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int, position: Int) {
         if (direction == ItemTouchHelper.LEFT) {
             val record = logRecordsAdapter.getItem(position)
-            deleteRecord(record)
-            logRecordsAdapter.removeItem(position)
-            updateContentState()
-            val snackbar = Snackbar.make(recyclerViewLogRecords, R.string.text_interaction_log_entry_delete, Snackbar.LENGTH_LONG)
-            snackbar.setAction(R.string.text_interaction_log_entry_delete_cancel) { _ ->
-                saveRecord(record)
-                logRecordsAdapter.insertItem(record, position)
-                updateContentState()
-            }
-            snackbar.show()
+            removeItemWithSnackBar(record, position)
         }
+    }
+
+    private fun getPositionAndRemove(record: InteractionLog) {
+        val position = logRecordsAdapter.getItemPosition(record)
+        removeItemWithSnackBar(record, position)
+    }
+
+    private fun removeItemWithSnackBar(record: InteractionLog, position: Int) {
+        deleteRecord(record)
+        logRecordsAdapter.removeItem(position)
+        updateContentState()
+        val snackbar = Snackbar.make(recyclerViewLogRecords, R.string.text_interaction_log_entry_delete, Snackbar.LENGTH_LONG)
+        snackbar.setAction(R.string.text_interaction_log_entry_delete_cancel) { _ ->
+            saveRecord(record)
+            logRecordsAdapter.insertItem(record, position)
+            updateContentState()
+        }
+        snackbar.show()
     }
 
     private fun saveRecord(record: InteractionLog) {

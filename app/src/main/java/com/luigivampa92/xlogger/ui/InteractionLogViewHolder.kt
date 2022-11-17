@@ -5,10 +5,9 @@ import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.nfc.tech.IsoDep
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -19,12 +18,14 @@ import com.luigivampa92.xlogger.domain.InteractionType
 import java.text.DateFormat
 import java.util.*
 
-// todo texts for payment card, nearby, transit card etc
+// todo texts for payment card, nearby, transit card etc ??
 
 class InteractionLogViewHolder (
     inflater: LayoutInflater,
     container: ViewGroup,
     private val onItemClickListener: ((InteractionLog) -> Unit)? = null,
+    private val onShareClickListener: ((InteractionLog) -> Unit)? = null,
+    private val onDeleteClickListener: ((InteractionLog) -> Unit)? = null,
 ) : RecyclerView.ViewHolder(inflater.inflate(R.layout.item_interaction_log, container, false)) {
 
     val viewForeground: ConstraintLayout
@@ -82,8 +83,20 @@ class InteractionLogViewHolder (
         viewForeground.setOnClickListener {
             onItemClickListener?.invoke(log)
         }
+        viewForeground.setOnLongClickListener {
+            val popup = PopupMenu(itemView.context, viewForeground)
+            popup.inflate(R.menu.interaction_log_options_menu)
+            popup.setOnMenuItemClickListener { item ->
+                when (item?.title) {
+                    itemView.context.getString(R.string.text_interaction_log_menu_item_share) -> { onShareClickListener?.invoke(log) }
+                    itemView.context.getString(R.string.text_interaction_log_menu_item_delete) -> { onDeleteClickListener?.invoke(log) }
+                }
+                true
+            }
+            popup.show()
+            true
+        }
     }
-
 
     private fun getTitleText(log: InteractionLog): String {
         return when (log.type) {

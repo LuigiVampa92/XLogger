@@ -7,12 +7,14 @@ import com.luigivampa92.xlogger.domain.InteractionLog
 
 class InteractionLogAdapter (
     private val onItemClickListener: ((InteractionLog) -> Unit)? = null,
+    private val onShareClickListener: ((InteractionLog) -> Unit)? = null,
+    private val onDeleteClickListener: ((InteractionLog) -> Unit)? = null,
 ) : RecyclerView.Adapter<InteractionLogViewHolder>() {
 
     private val items: ArrayList<InteractionLog> = arrayListOf()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-        InteractionLogViewHolder(LayoutInflater.from(parent.context), parent, onItemClickListener)
+        InteractionLogViewHolder(LayoutInflater.from(parent.context), parent, onItemClickListener, onShareClickListener, onDeleteClickListener)
 
     override fun onBindViewHolder(holder: InteractionLogViewHolder, position: Int) {
         holder.bind(items[position])
@@ -27,6 +29,8 @@ class InteractionLogAdapter (
     }
 
     fun getItem(position: Int): InteractionLog = items[position]
+
+    fun getItemPosition(record: InteractionLog): Int = items.indexOf(record)
 
     fun insertItem(item: InteractionLog, position: Int) {
         items.add(position, item)
