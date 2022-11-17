@@ -9,3 +9,4 @@ captures/
 .externalNativeBuild/
 .cxx/
 local.properties
+signing.properties

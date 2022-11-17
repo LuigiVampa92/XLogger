@@ -6,28 +6,49 @@ plugins {
 }
 
 def appVersionCode = 1
-def appVersionName = "1.0"
+def appVersionName = "0.7"
+def minSdkValue = 23
+def maxSdkValue = 33
 
 android {
-    compileSdk 33
+    compileSdk maxSdkValue
     defaultConfig {
         applicationId "com.luigivampa92.xlogger"
-        minSdk 23
-        targetSdk 33
+        minSdk minSdkValue
+        targetSdk maxSdkValue
         versionCode appVersionCode
         versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "LOG_TAG", "\"XLOGGER\""
     }
+    signingConfigs {
+        release
+        def props = new Properties()
+        def propFile = new File('signing.properties')
+        if (propFile.canRead()) {
+            props.load(new FileInputStream(propFile))
+            if (props!=null && props.containsKey('keystore.file') && props.containsKey('keystore.password') && props.containsKey('key.alias') && props.containsKey('key.password')) {
+                android.signingConfigs.release.storeFile = file(props['keystore.file'])
+                android.signingConfigs.release.storePassword = props['keystore.password']
+                android.signingConfigs.release.keyAlias = props['key.alias']
+                android.signingConfigs.release.keyPassword = props['key.password']
+            }
+        } else {
+            android.buildTypes.release.signingConfig = null
+        }
+    }
     buildTypes {
         release {
             buildConfigField "Boolean", "LOGS_ENABLED", "false"
             buildConfigField "int", "LOG_LEVEL", "android.util.Log.INFO"
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            zipAlignEnabled true
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
             minifyEnabled true
             shrinkResources true
-            zipAlignEnabled true
-            signingConfig signingConfigs.debug  // todo make actual signing config
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
         debug {
             buildConfigField "Boolean", "LOGS_ENABLED", "true"
@@ -42,6 +63,17 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
         encoding "UTF-8"
+    }
+    android.applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def separator = "_"
+            def projectName = variant.applicationId
+            def buildType = variant.buildType.name
+            def versionName = variant.versionName
+            def datetime = new Date().format('ddMMyyyy_HHmm')
+            def apkName = projectName + separator + versionName + separator + buildType + separator + datetime + ".apk"
+            output.outputFileName = "${apkName}"
+        }
     }
 }
 
