@@ -7,7 +7,9 @@ import com.luigivampa92.xlogger.domain.InteractionLog
 import com.luigivampa92.xlogger.domain.InteractionLogEntryAction
 import com.luigivampa92.xlogger.domain.InteractionType.*
 
-class InteractionLogEntryAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class InteractionLogDetailsAdapter (
+    private val onShareClickListener: ((InteractionLog) -> Unit)? = null
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private companion object {
         private const val VIEW_TYPE_NFC_ENTRY = 1
@@ -21,9 +23,9 @@ class InteractionLogEntryAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
         when (viewType) {
             VIEW_TYPE_NFC_ENTRY -> InteractionLogNfcEntryViewHolder(LayoutInflater.from(parent.context), parent)
-            VIEW_TYPE_NFC_HEADER -> InteractionLogNfcHeaderViewHolder(LayoutInflater.from(parent.context), parent)
+            VIEW_TYPE_NFC_HEADER -> InteractionLogNfcHeaderViewHolder(LayoutInflater.from(parent.context), parent, onShareClickListener)
             VIEW_TYPE_BLE_GATT_ENTRY -> InteractionLogBleGattEntryViewHolder(LayoutInflater.from(parent.context), parent)
-            VIEW_TYPE_BLE_GATT_HEADER -> InteractionLogBleGattHeaderViewHolder(LayoutInflater.from(parent.context), parent)
+            VIEW_TYPE_BLE_GATT_HEADER -> InteractionLogBleGattHeaderViewHolder(LayoutInflater.from(parent.context), parent, onShareClickListener)
             else -> throw RuntimeException("Unknown view type")
         }
 

@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.luigivampa92.xlogger.InteractionLogSender
 import com.luigivampa92.xlogger.R
 import com.luigivampa92.xlogger.domain.InteractionLog
 
@@ -25,8 +26,9 @@ class InteractionLogActivity : BaseActivity() {
     }
 
     private lateinit var interactionLog: InteractionLog
+    private lateinit var logSender: InteractionLogSender
     private lateinit var recyclerViewLogEntries: RecyclerView
-    private lateinit var recyclerViewLogEntriesAdapter: InteractionLogEntryAdapter
+    private lateinit var recyclerViewLogEntriesAdapter: InteractionLogDetailsAdapter
     private lateinit var recyclerViewLogEntriesLayoutManager: LinearLayoutManager
     private lateinit var recyclerViewItemDecoration: DividerItemDecoration
 
@@ -42,8 +44,10 @@ class InteractionLogActivity : BaseActivity() {
             interactionLog = receivedLog
         }
 
+        logSender = InteractionLogSender(this)
+
         recyclerViewLogEntries = findViewById(R.id.recycler_view_log_entires)
-        recyclerViewLogEntriesAdapter = InteractionLogEntryAdapter()
+        recyclerViewLogEntriesAdapter = InteractionLogDetailsAdapter(logSender::sendLog)
         recyclerViewLogEntriesLayoutManager = LinearLayoutManager(this)
         recyclerViewItemDecoration = DividerItemDecoration(recyclerViewLogEntries.context, DividerItemDecoration.VERTICAL)
         recyclerViewItemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider_line_horizontal)!!)

@@ -21,4 +21,8 @@
     <string name="text_timeunit_min">m</string>
     <string name="text_timeunit_hour">h</string>
 
+    <string name="text_share_log_intent_chooser_message">Select application to send log</string>
+    <string name="text_share_log_intent_subject">Communication log from XLogger</string>
+    <string name="text_share_log_intent_message">Sending a file containing communication log from XLogger</string>
+
 </resources>

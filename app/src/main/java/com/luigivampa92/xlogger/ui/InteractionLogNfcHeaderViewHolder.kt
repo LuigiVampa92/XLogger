@@ -10,11 +10,10 @@ import com.luigivampa92.xlogger.domain.InteractionLog
 import com.luigivampa92.xlogger.domain.InteractionLogPrintHeaderSerializerImpl
 import com.luigivampa92.xlogger.domain.InteractionLogSerializer
 
-// todo onclick
-
 class InteractionLogNfcHeaderViewHolder (
     inflater: LayoutInflater,
     container: ViewGroup,
+    private val onShareClickListener: ((InteractionLog) -> Unit)? = null
 ) : RecyclerView.ViewHolder(inflater.inflate(R.layout.item_interaction_log_header_nfc, container, false)) {
 
     private val textHeader: TextView
@@ -29,5 +28,6 @@ class InteractionLogNfcHeaderViewHolder (
 
     fun bind(log: InteractionLog) {
         textHeader.text = headerSerializer.serialize(log)
+        buttonShare.setOnClickListener { onShareClickListener?.invoke(log) }
     }
 }
