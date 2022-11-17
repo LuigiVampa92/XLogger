@@ -64,7 +64,7 @@
             android:layout_centerVertical="true"
             android:layout_marginStart="8dp"
             android:textSize="14dp"
-            android:textColor="@color/color_main_background"
+            android:textColor="@color/color_red_banner_text"
             android:singleLine="false"
             android:maxLines="3"
             android:text="@string/xposed_disabled_notification_title"

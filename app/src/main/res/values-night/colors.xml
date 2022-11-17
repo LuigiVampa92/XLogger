@@ -9,4 +9,6 @@
     <color name="color_log_entry_second">#222222</color>
     <color name="color_log_entry_devider">#606060</color>
 
+    <color name="color_red_banner_text">@color/color_white</color>
+
 </resources>
