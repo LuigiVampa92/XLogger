@@ -5,8 +5,8 @@
     <color name="color_main_background">#000000</color>
     <color name="color_item_log_background">#222222</color>
 
-    <color name="color_log_entry_first">#F3F3F3</color>
-    <color name="color_log_entry_second">#DDDDDD</color>
-    <color name="color_log_entry_devider">#BBBBBB</color>
+    <color name="color_log_entry_first">#444444</color>
+    <color name="color_log_entry_second">#222222</color>
+    <color name="color_log_entry_devider">#606060</color>
 
 </resources>
