@@ -5,8 +5,8 @@ plugins {
     id 'kotlin-parcelize'
 }
 
-def appVersionCode = 1
-def appVersionName = "0.7"
+def appVersionCode = 2
+def appVersionName = "0.7.1"
 def minSdkValue = 23
 def maxSdkValue = 33
 
