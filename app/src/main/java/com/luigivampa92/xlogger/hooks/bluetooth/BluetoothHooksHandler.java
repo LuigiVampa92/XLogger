@@ -18,11 +18,15 @@ import com.luigivampa92.xlogger.domain.InteractionLog;
 import com.luigivampa92.xlogger.domain.InteractionLogEntry;
 import com.luigivampa92.xlogger.domain.InteractionLogEntryAction;
 import com.luigivampa92.xlogger.domain.InteractionType;
+import com.luigivampa92.xlogger.hooks.HookUtils;
 import com.luigivampa92.xlogger.hooks.HooksHandler;
 import com.luigivampa92.xlogger.hooks.XLog;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -61,17 +65,57 @@ public final class BluetoothHooksHandler implements HooksHandler {
     private void applyBleHooks(final XC_LoadPackage.LoadPackageParam lpparam) {
         XLog.v("Init ble hooks for package %s - start", lpparam.packageName);
         try {
-//            applyPrimaryGattHooks();                  // not used
-//            applySecondaryGattHooks();                // not used
-            applyPrimaryGattCallbackHooks();
-            applySecondaryGattCallbackHooks();
-            applyPrimaryGattServerHooks();
-//            applySecondaryGattServerHooks();          // not used
-            applyPrimaryGattServerCallbackHooks();
-            applySecondaryGattServerCallbackHooks();
+            applyBleHooksToUnextendableGattClasses(lpparam);
+            applyBleHooksToGattCallbackDirectlyInstantiatedClasses(lpparam);
+            applyBleHooksToGattCallbackNonAbstractChildClasses(lpparam);
             XLog.d("Init ble hooks for package %s - complete", lpparam.packageName);
         } catch (Throwable e) {
             XLog.d("Init ble hooks for package %s - error", lpparam.packageName);
+        }
+    }
+
+    private void applyBleHooksToUnextendableGattClasses(final XC_LoadPackage.LoadPackageParam lpparam) {
+//            applyPrimaryGattHooks();                  // not used
+//            applySecondaryGattHooks();                // not used
+        applyPrimaryGattServerHooks();
+//            applySecondaryGattServerHooks();          // not used
+    }
+
+    private void applyBleHooksToGattCallbackDirectlyInstantiatedClasses(final XC_LoadPackage.LoadPackageParam lpparam) {
+        XLog.v("Init ble hooks to directly instantiated callback classes for package %s - start", lpparam.packageName);
+        applyPrimaryGattCallbackHooks(BluetoothGattCallback.class);
+        applySecondaryGattCallbackHooks(BluetoothGattCallback.class);
+        applyPrimaryGattServerCallbackHooks(BluetoothGattServerCallback.class);
+        applySecondaryGattServerCallbackHooks(BluetoothGattServerCallback.class);
+        XLog.v("Init ble hooks to directly instantiated callback classes for package %s - complete", lpparam.packageName);
+    }
+
+    private void applyBleHooksToGattCallbackNonAbstractChildClasses(final XC_LoadPackage.LoadPackageParam lpparam) {
+        XLog.v("Init ble hooks to non abstract children of callback classes for package %s - start", lpparam.packageName);
+        Class<?>[] targetParentClasses = new Class<?>[] { BluetoothGattCallback.class, BluetoothGattServerCallback.class };
+        try {
+            Map<Class<?>, Set<Class<?>>> childClasses = HookUtils.findChildClassesInClassLoader(hookedAppContext, targetParentClasses);
+            if (childClasses.containsKey(BluetoothGattCallback.class)) {
+                Set<Class<?>> gattCallbackChildClasses = childClasses.get(BluetoothGattCallback.class);
+                if (gattCallbackChildClasses != null && !gattCallbackChildClasses.isEmpty()) {
+                    for (Class<?> child : gattCallbackChildClasses) {
+                        applyPrimaryGattCallbackHooks(child);
+                        applySecondaryGattCallbackHooks(child);
+                    }
+                }
+            }
+            if (childClasses.containsKey(BluetoothGattServerCallback.class)) {
+                Set<Class<?>> gattServerCallbackChildClasses = childClasses.get(BluetoothGattServerCallback.class);
+                if (gattServerCallbackChildClasses != null && !gattServerCallbackChildClasses.isEmpty()) {
+                    for (Class<?> child : gattServerCallbackChildClasses) {
+                        applyPrimaryGattServerCallbackHooks(child);
+                        applySecondaryGattServerCallbackHooks(child);
+                    }
+                }
+            }
+            XLog.v("Init ble hooks to non abstract children of callback classes for package %s - complete", lpparam.packageName);
+        } catch (IOException | ClassNotFoundException e) {
+            XLog.v("Init ble hooks to non abstract children of callback classes for package %s - error", lpparam.packageName);
         }
     }
 
@@ -104,11 +148,11 @@ public final class BluetoothHooksHandler implements HooksHandler {
 //            boolean requestConnectionPriority(int connectionPriority)    // ???
     }
 
-    private void applyPrimaryGattCallbackHooks() {
+    private void applyPrimaryGattCallbackHooks(Class<?> bluetoothGattCallbackClass) {
         // track connections/disconnections
         if (verbosityLevelForLogs <= XLog.INFO) {
             XposedHelpers.findAndHookMethod(
-                    BluetoothGattCallback.class,
+                    bluetoothGattCallbackClass,
                     "onConnectionStateChange",
                     BluetoothGatt.class,
                     int.class,
@@ -158,7 +202,7 @@ public final class BluetoothHooksHandler implements HooksHandler {
         // communication - THIS device requests to READ FROM a gatt characteristic on the service running on ANOTHER device
         if (verbosityLevelForLogs <= XLog.INFO) {
             XposedHelpers.findAndHookMethod(
-                    BluetoothGattCallback.class,
+                    bluetoothGattCallbackClass,
                     "onCharacteristicRead",
                     BluetoothGatt.class,
                     BluetoothGattCharacteristic.class,
@@ -198,7 +242,7 @@ public final class BluetoothHooksHandler implements HooksHandler {
         // communication - THIS device requests to WRITE TO a gatt characteristic on the service running on ANOTHER device
         if (verbosityLevelForLogs <= XLog.INFO) {
             XposedHelpers.findAndHookMethod(
-                    BluetoothGattCallback.class,
+                    bluetoothGattCallbackClass,
                     "onCharacteristicWrite",
                     BluetoothGatt.class,
                     BluetoothGattCharacteristic.class,
@@ -238,7 +282,7 @@ public final class BluetoothHooksHandler implements HooksHandler {
         // communication - ANOTHER device sends a NOTIFY that gatt characteristic changed to THIS device
         if (verbosityLevelForLogs <= XLog.INFO) {
             XposedHelpers.findAndHookMethod(
-                    BluetoothGattCallback.class,
+                    bluetoothGattCallbackClass,
                     "onCharacteristicChanged",
                     BluetoothGatt.class,
                     BluetoothGattCharacteristic.class,
@@ -278,11 +322,11 @@ public final class BluetoothHooksHandler implements HooksHandler {
 //            void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
     }
 
-    private void applySecondaryGattCallbackHooks() {
+    private void applySecondaryGattCallbackHooks(Class<?> bluetoothGattCallbackClass) {
         // peripherial gatt service received
         if (verbosityLevelForLogs <= XLog.DEBUG) {
             XposedHelpers.findAndHookMethod(
-                    BluetoothGattCallback.class,
+                    bluetoothGattCallbackClass,
                     "onServicesDiscovered",
                     BluetoothGatt.class,
                     int.class,
@@ -389,11 +433,11 @@ public final class BluetoothHooksHandler implements HooksHandler {
 //            XLog.i("BLE - INFO - gatt server on [ THIS DEVICE ] requested to remove all running gatt services");
     }
 
-    private void applyPrimaryGattServerCallbackHooks() {
+    private void applyPrimaryGattServerCallbackHooks(Class<?> bluetoothGattServerCallbackClass) {
         // track connections/disconnections
         if (verbosityLevelForLogs <= XLog.INFO) {
             XposedHelpers.findAndHookMethod(
-                    BluetoothGattServerCallback.class,
+                    bluetoothGattServerCallbackClass,
                     "onConnectionStateChange",
                     BluetoothDevice.class,
                     int.class,
@@ -443,7 +487,7 @@ public final class BluetoothHooksHandler implements HooksHandler {
         // communication - ANOTHER device requests to READ FROM a gatt characteristic on the service running on THIS device
         if (verbosityLevelForLogs <= XLog.INFO) {
             XposedHelpers.findAndHookMethod(
-                    BluetoothGattServerCallback.class,
+                    bluetoothGattServerCallbackClass,
                     "onCharacteristicReadRequest",
                     BluetoothDevice.class,
                     int.class,
@@ -484,7 +528,7 @@ public final class BluetoothHooksHandler implements HooksHandler {
         // communication - ANOTHER device requests to WRITE TO a gatt characteristic on the service running on THIS device
         if (verbosityLevelForLogs <= XLog.INFO) {
             XposedHelpers.findAndHookMethod(
-                    BluetoothGattServerCallback.class,
+                    bluetoothGattServerCallbackClass,
                     "onCharacteristicWriteRequest",
                     BluetoothDevice.class,
                     int.class,
@@ -530,11 +574,11 @@ public final class BluetoothHooksHandler implements HooksHandler {
 //            void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value)
     }
 
-    private void applySecondaryGattServerCallbackHooks() {
+    private void applySecondaryGattServerCallbackHooks(Class<?> bluetoothGattServerCallbackClass) {
         // announce gatt service
         if (verbosityLevelForLogs <= XLog.DEBUG) {
             XposedHelpers.findAndHookMethod(
-                    BluetoothGattServerCallback.class,
+                    bluetoothGattServerCallbackClass,
                     "onServiceAdded",
                     int.class,
                     BluetoothGattService.class,
