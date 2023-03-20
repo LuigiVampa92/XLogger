@@ -29,9 +29,9 @@ object Mappers {
         }
 
         else if (InteractionLogEntryAction.BLE_READ == logEntry.action && logEntry.sender == BroadcastConstants.PEER_THIS_DEVICE) {
-            InteractionLogEntryActionDirection.STRAIGHT
-        } else if (InteractionLogEntryAction.BLE_READ == logEntry.action && logEntry.receiver == BroadcastConstants.PEER_THIS_DEVICE) {
             InteractionLogEntryActionDirection.REVERSAL
+        } else if (InteractionLogEntryAction.BLE_READ == logEntry.action && logEntry.receiver == BroadcastConstants.PEER_THIS_DEVICE) {
+            InteractionLogEntryActionDirection.STRAIGHT
         } else if (InteractionLogEntryAction.BLE_WRITE == logEntry.action && logEntry.sender == BroadcastConstants.PEER_THIS_DEVICE) {
             InteractionLogEntryActionDirection.STRAIGHT
         } else if (InteractionLogEntryAction.BLE_WRITE == logEntry.action && logEntry.receiver == BroadcastConstants.PEER_THIS_DEVICE) {
